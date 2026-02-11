@@ -72,3 +72,14 @@
 .neon-border-blue {
   box-shadow: 0 0 15px hsla(191, 100%, 54%, 0.2);
 }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px) rotate(-5deg); }
+  50% { transform: translateX(2px) rotate(5deg); }
+  75% { transform: translateX(-2px) rotate(-5deg); }
+}
+
+.animate-shake {
+  animation: shake 0.3s ease-in-out infinite;
+}

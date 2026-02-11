@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Bell, Check, Info, AlertTriangle, ShieldAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/hooks/use-toast'
 
 interface NotificationItem {
   id: string
@@ -21,44 +22,95 @@ interface NotificationItem {
   tabRedirect?: string
 }
 
+const INITIAL_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: '1',
+    title: '⚠️ Critical: Cow BW-452 Fever Spike detected.',
+    time: '2 mins ago',
+    type: 'critical',
+    read: false,
+    tabRedirect: 'alerts'
+  },
+  {
+    id: '2',
+    title: 'System: Network Gateway reconnected.',
+    time: '15 mins ago',
+    type: 'system',
+    read: false,
+    tabRedirect: 'sensors'
+  },
+  {
+    id: '3',
+    title: '✅ Vet Visit confirmed for tomorrow.',
+    time: '2 hours ago',
+    type: 'success',
+    read: true,
+    tabRedirect: 'staff'
+  },
+  {
+    id: '4',
+    title: 'Report: Weekly Yield Summary available.',
+    time: '5 hours ago',
+    type: 'info',
+    read: true,
+    tabRedirect: 'kpis'
+  }
+]
+
 export function NotificationCenter({ onTabChange }: { onTabChange: (tab: string) => void }) {
+  const { toast } = useToast()
   const [open, setOpen] = useState(false)
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    {
-      id: '1',
-      title: '⚠️ Critical: Cow BW-452 Fever Spike detected.',
-      time: '2 mins ago',
-      type: 'critical',
-      read: false,
-      tabRedirect: 'alerts'
-    },
-    {
-      id: '2',
-      title: 'System: Network Gateway reconnected.',
-      time: '15 mins ago',
-      type: 'system',
-      read: false,
-      tabRedirect: 'sensors'
-    },
-    {
-      id: '3',
-      title: '✅ Vet Visit confirmed for tomorrow.',
-      time: '2 hours ago',
-      type: 'success',
-      read: true,
-      tabRedirect: 'staff'
-    },
-    {
-      id: '4',
-      title: 'Report: Weekly Yield Summary available.',
-      time: '5 hours ago',
-      type: 'info',
-      read: true,
-      tabRedirect: 'kpis'
-    }
-  ])
+  const [isFlashing, setIsFlashing] = useState(false)
+  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS)
 
   const unreadCount = notifications.filter(n => !n.read).length
+
+  const generateNewEvents = useCallback(() => {
+    const newItems: NotificationItem[] = [
+      {
+        id: Date.now().toString() + '-1',
+        title: '⚠️ ALERT: Cow BW-452 Fever Spike Detected.',
+        time: 'Just now',
+        type: 'critical',
+        read: false,
+        tabRedirect: 'alerts'
+      },
+      {
+        id: Date.now().toString() + '-2',
+        title: 'System: New sensor telemetry received.',
+        time: 'Just now',
+        type: 'system',
+        read: false,
+        tabRedirect: 'sensors'
+      }
+    ]
+
+    setNotifications(prev => {
+      const updatedRead = prev.filter(n => n.read).slice(0, 4) // Keep max 4 read items
+      const updatedUnread = prev.filter(n => !n.read)
+      return [...newItems, ...updatedUnread, ...updatedRead]
+    })
+
+    // Visual Alert
+    setIsFlashing(true)
+    setTimeout(() => setIsFlashing(false), 3000)
+
+    toast({
+      title: "New Health Alerts",
+      description: "2 new critical events require your attention.",
+    })
+  }, [toast])
+
+  // Lifecycle loop for regenerating notifications
+  useEffect(() => {
+    if (unreadCount === 0) {
+      const timer = setTimeout(() => {
+        generateNewEvents()
+      }, 120000) // 2 minutes
+
+      return () => clearTimeout(timer)
+    }
+  }, [unreadCount, generateNewEvents])
 
   const markAllAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
@@ -75,8 +127,18 @@ export function NotificationCenter({ onTabChange }: { onTabChange: (tab: string)
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative hover:bg-white/5 transition-colors">
-          <Bell className="h-5 w-5 text-muted-foreground" />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className={cn(
+            "relative hover:bg-white/5 transition-all duration-300",
+            isFlashing ? "animate-shake ring-2 ring-primary bg-primary/10" : ""
+          )}
+        >
+          <Bell className={cn(
+            "h-5 w-5 transition-colors",
+            isFlashing ? "text-primary" : "text-muted-foreground"
+          )} />
           {unreadCount > 0 && (
             <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground animate-in zoom-in">
               {unreadCount}

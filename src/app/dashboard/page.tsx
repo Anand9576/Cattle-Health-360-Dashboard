@@ -28,7 +28,8 @@ import {
   ShieldCheck,
   MapPin,
   Zap,
-  Cpu
+  Cpu,
+  Phone
 } from 'lucide-react'
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -60,6 +61,51 @@ const sensors = [
   { id: 'Tag-003', cow: 'BW-098', status: 'Offline', battery: 0, signal: 'N/A', calib: 'Invalid' },
   { id: 'Tag-004', cow: 'BW-221', status: 'Online', battery: 92, signal: 'Strong', calib: 'Valid' },
   { id: 'Tag-005', cow: 'BW-333', status: 'Online', battery: 45, signal: 'Moderate', calib: 'Valid' },
+]
+
+const detailedAlerts = [
+  { 
+    id: 'BW-101', 
+    type: 'Inactivity', 
+    description: 'Unusual inactivity detected', 
+    time: '2 mins ago', 
+    severity: 'Medium', 
+    needsAttention: true,
+    icon: <Activity className="h-5 w-5" />
+  },
+  { 
+    id: 'BW-102', 
+    type: 'Fever', 
+    description: 'Fever detected (39.8C)', 
+    time: '10 mins ago', 
+    severity: 'High', 
+    icon: <Thermometer className="h-5 w-5" />
+  },
+  { 
+    id: 'BW-103', 
+    type: 'Healthy', 
+    description: 'All vitals within normal range', 
+    time: '25 mins ago', 
+    severity: 'Low', 
+    icon: <ShieldCheck className="h-5 w-5" />
+  },
+  { 
+    id: 'BW-104', 
+    type: 'CRITICAL', 
+    description: 'In critical condition and need vet', 
+    time: '1 min ago', 
+    severity: 'Critical', 
+    needsVet: true,
+    icon: <ShieldAlert className="h-5 w-5" />
+  },
+  { 
+    id: 'BW-105', 
+    type: 'Geofence', 
+    description: 'Approaching pasture boundary', 
+    time: '45 mins ago', 
+    severity: 'Low', 
+    icon: <MapPin className="h-5 w-5" />
+  },
 ]
 
 export default function Dashboard() {
@@ -230,23 +276,50 @@ export default function Dashboard() {
              <Card className="glass-card">
               <CardHeader>
                 <CardTitle>Live Health Alerts</CardTitle>
-                <CardDescription>Real-time feed from all wearable sensors</CardDescription>
+                <CardDescription>Real-time feed from all wearable sensors with detailed diagnostic data</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {[1,2,3,4,5].map(i => (
-                  <div key={i} className="flex items-center justify-between p-4 bg-background/40 border border-white/5 rounded-lg">
+                {detailedAlerts.map((alert) => (
+                  <div key={alert.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-background/40 border border-white/5 rounded-lg gap-4 group">
                     <div className="flex items-center gap-4">
-                      <div className={`p-2 rounded-md ${i === 1 ? 'bg-destructive/20 text-destructive' : 'bg-muted text-muted-foreground'}`}>
-                        <AlertTriangle className="h-5 w-5" />
+                      <div className={`p-3 rounded-xl border transition-colors ${
+                        alert.severity === 'Critical' ? 'bg-destructive/10 border-destructive/20 text-destructive' :
+                        alert.severity === 'High' ? 'bg-orange-500/10 border-orange-500/20 text-orange-500' :
+                        alert.type === 'Healthy' ? 'bg-primary/10 border-primary/20 text-primary' :
+                        'bg-muted border-white/5 text-muted-foreground'
+                      }`}>
+                        {alert.icon}
                       </div>
                       <div>
-                        <p className="font-medium">Cow #BW-{100 + i} Alert</p>
-                        <p className="text-xs text-muted-foreground">{i % 2 === 0 ? 'Fever detected (39.8C)' : 'Unusual inactivity detected'}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold tracking-tight">Cow #{alert.id}</p>
+                          <Badge variant={
+                            alert.severity === 'Critical' ? 'destructive' : 
+                            alert.severity === 'High' ? 'secondary' : 
+                            'outline'
+                          } className="text-[10px] py-0">
+                            {alert.type}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{alert.description}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">{i * 5} mins ago</p>
-                      <Button variant="link" size="sm" className="h-auto p-0 text-primary">View Details</Button>
+                    <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2">
+                      <div className="flex items-center gap-3">
+                        {alert.needsAttention && (
+                          <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider animate-pulse">Needs Attention</span>
+                        )}
+                        <p className="text-[10px] text-muted-foreground whitespace-nowrap">{alert.time}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {alert.needsVet && (
+                          <Button size="sm" variant="default" className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold gap-2">
+                            <Phone className="h-3 w-3" />
+                            Call Vet
+                          </Button>
+                        )}
+                        <Button variant="link" size="sm" className="h-auto p-0 text-primary group-hover:underline">View Details</Button>
+                      </div>
                     </div>
                   </div>
                 ))}

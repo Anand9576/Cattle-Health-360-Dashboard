@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -20,7 +21,8 @@ import {
   Milk,
   Battery,
   ShieldAlert,
-  Search
+  Search,
+  LogOut
 } from 'lucide-react'
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -141,6 +143,12 @@ export default function Dashboard() {
             <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center border border-white/20">
               <User className="h-5 w-5 text-secondary-foreground" />
             </div>
+            <Button variant="ghost" size="icon" asChild className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+              <Link href="/login">
+                <LogOut className="h-5 w-5" />
+                <span className="sr-only">Logout</span>
+              </Link>
+            </Button>
           </div>
         </div>
       </header>

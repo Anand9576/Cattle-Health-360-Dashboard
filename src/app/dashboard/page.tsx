@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -10,6 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { 
   Activity, 
   AlertTriangle, 
@@ -29,22 +36,24 @@ import {
   MapPin,
   Zap,
   Cpu,
-  Phone
+  Phone,
+  ArrowUpRight,
+  SearchCode
 } from 'lucide-react'
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, BarChart, Bar
+  LineChart, Line, BarChart, Bar, Legend
 } from 'recharts'
 import { AIChat } from '@/components/dashboard/ai-chat'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { PlaceHolderImages } from '@/lib/placeholder-images'
 
 // Static Data
-const thermalData = [
-  { time: '00:00', temp: 38.5 }, { time: '04:00', temp: 38.2 },
-  { time: '08:00', temp: 39.1 }, { time: '12:00', temp: 39.5 },
-  { time: '16:00', temp: 39.2 }, { time: '20:00', temp: 38.8 },
-  { time: '23:59', temp: 38.6 }
+const herdThermalData = [
+  { time: '00:00', avgTemp: 38.5 }, { time: '04:00', avgTemp: 38.2 },
+  { time: '08:00', avgTemp: 39.1 }, { time: '12:00', avgTemp: 39.5 },
+  { time: '16:00', avgTemp: 39.2 }, { time: '20:00', avgTemp: 38.8 },
+  { time: '23:59', avgTemp: 38.6 }
 ]
 
 const staffListInitial = [
@@ -112,6 +121,8 @@ export default function Dashboard() {
   const [emergencyMode, setEmergencyMode] = useState(false)
   const [liveActivity, setLiveActivity] = useState<any[]>([])
   const [staffList, setStaffList] = useState(staffListInitial)
+  const [selectedCowId, setSelectedCowId] = useState('BW-452')
+  const [pulsingTemps, setPulsingTemps] = useState({ 'BW-452': 39.8, 'BW-103': 38.4 })
 
   const cowProfileImg = PlaceHolderImages.find(img => img.id === 'cow-profile');
 
@@ -137,7 +148,13 @@ export default function Dashboard() {
         }]
         return newData
       })
-    }, 1000)
+      
+      // Pulse temps for favorites
+      setPulsingTemps(prev => ({
+        'BW-452': 39.5 + Math.random() * 0.6,
+        'BW-103': 38.2 + Math.random() * 0.4
+      }))
+    }, 2000)
 
     return () => clearInterval(interval)
   }, [])
@@ -159,6 +176,16 @@ export default function Dashboard() {
     document.body.appendChild(link)
     link.click()
   }
+
+  const individualComparisonData = useMemo(() => {
+    return herdThermalData.map(item => {
+      const deviation = selectedCowId === 'BW-452' ? 0.8 : (selectedCowId === 'BW-103' ? -0.2 : 0.1);
+      return {
+        ...item,
+        cowTemp: item.avgTemp + (Math.random() * 0.4) + deviation
+      }
+    })
+  }, [selectedCowId])
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden flex flex-col">
@@ -419,34 +446,163 @@ export default function Dashboard() {
             </Card>
           </TabsContent>
 
-          {/* Tab 6: Thermal */}
-          <TabsContent value="thermal" className="space-y-6">
-            <Card className="glass-card h-[400px]">
+          {/* Tab 6: Thermal Analysis */}
+          <TabsContent value="thermal" className="space-y-6 animate-in fade-in duration-500">
+            {/* 1. Main Section: Herd Aggregate Trend */}
+            <Card className="glass-card">
               <CardHeader>
-                <CardTitle>Herd Thermal Trend</CardTitle>
-                <CardDescription>Aggregate body temperature over 24 hours</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <Thermometer className="h-5 w-5 text-primary" />
+                  Herd Average Temperature (24h)
+                </CardTitle>
+                <CardDescription>
+                  Smooth aggregate tracking across the entire herd population
+                </CardDescription>
               </CardHeader>
-              <CardContent className="h-full pb-16">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={thermalData}>
-                    <defs>
-                      <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                    <XAxis dataKey="time" stroke="#ffffff50" />
-                    <YAxis domain={[37, 40]} stroke="#ffffff50" />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-                      itemStyle={{ color: 'hsl(var(--primary))' }}
-                    />
-                    <Area type="monotone" dataKey="temp" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorTemp)" />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <CardContent>
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={herdThermalData}>
+                      <defs>
+                        <linearGradient id="herdTempGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.4}/>
+                          <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                      <XAxis dataKey="time" stroke="#ffffff50" fontSize={10} />
+                      <YAxis domain={[37, 40]} stroke="#ffffff50" fontSize={10} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
+                        itemStyle={{ color: 'hsl(var(--primary))' }}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="avgTemp" 
+                        stroke="hsl(var(--destructive))" 
+                        strokeWidth={3}
+                        fillOpacity={1} 
+                        fill="url(#herdTempGradient)" 
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-4 flex items-center gap-2 p-3 bg-muted/30 rounded-lg border border-white/5">
+                  <Info className="h-4 w-4 text-primary" />
+                  <p className="text-xs text-muted-foreground italic">
+                    Data represents the aggregated average of 250 active sensors. Anomalies are smoothed out.
+                  </p>
+                </div>
               </CardContent>
             </Card>
+
+            {/* 2. Sub-Section: Individual Investigator */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column: Controls & Favorites */}
+              <div className="lg:col-span-1 space-y-4">
+                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted-foreground px-1">
+                  <Zap className="h-4 w-4 text-primary" />
+                  Priority Monitoring
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FavoriteCowCard 
+                    id="BW-452" 
+                    temp={pulsingTemps['BW-452']} 
+                    status="Critical" 
+                    isActive={selectedCowId === 'BW-452'}
+                    onClick={() => setSelectedCowId('BW-452')}
+                  />
+                  <FavoriteCowCard 
+                    id="BW-103" 
+                    temp={pulsingTemps['BW-103']} 
+                    status="Stable" 
+                    isActive={selectedCowId === 'BW-103'}
+                    onClick={() => setSelectedCowId('BW-103')}
+                  />
+                </div>
+
+                <Card className="glass-card">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-bold flex items-center gap-2">
+                      <SearchCode className="h-4 w-4 text-secondary" />
+                      Specific Cattle Inspector
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase">Select Cow ID</p>
+                      <Select value={selectedCowId} onValueChange={setSelectedCowId}>
+                        <SelectTrigger className="bg-background/50 border-white/10">
+                          <SelectValue placeholder="Search Cow ID..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card border-white/10">
+                          <SelectItem value="BW-452">BW-452 (Critical)</SelectItem>
+                          <SelectItem value="BW-103">BW-103 (Lameness)</SelectItem>
+                          <SelectItem value="BW-089">BW-089 (Standard)</SelectItem>
+                          <SelectItem value="BW-007">BW-007 (Elite)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="p-3 bg-secondary/10 border border-secondary/20 rounded-lg">
+                      <p className="text-[10px] font-bold text-secondary flex items-center gap-1">
+                        <Activity className="h-3 w-3" />
+                        INVESTIGATOR LOG
+                      </p>
+                      <p className="text-xs mt-1 leading-snug">
+                        Currently analyzing telemetry for <span className="text-primary font-bold">#{selectedCowId}</span>. 
+                        Cross-referencing with herd baseline...
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Column: Comparison Chart */}
+              <Card className="lg:col-span-2 glass-card">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-lg">Deviation Analysis</CardTitle>
+                      <CardDescription>Individual Cow #{selectedCowId} vs Herd Average</CardDescription>
+                    </div>
+                    <Badge variant="outline" className="border-primary/30 text-primary">Live Comparison</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[350px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={individualComparisonData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                        <XAxis dataKey="time" stroke="#ffffff30" fontSize={10} />
+                        <YAxis domain={[37, 41]} stroke="#ffffff30" fontSize={10} />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
+                        />
+                        <Legend iconType="circle" />
+                        <Line 
+                          type="monotone" 
+                          name={`Cow #${selectedCowId} Temp`} 
+                          dataKey="cowTemp" 
+                          stroke="hsl(var(--destructive))" 
+                          strokeWidth={3} 
+                          dot={{ r: 4, fill: 'hsl(var(--destructive))' }} 
+                          activeDot={{ r: 6 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          name="Herd Baseline" 
+                          dataKey="avgTemp" 
+                          stroke="#ffffff30" 
+                          strokeWidth={2} 
+                          strokeDasharray="5 5" 
+                          dot={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Tab 7: Staff */}
@@ -702,5 +858,27 @@ function DetailRow({ label, value }: { label: string, value: string }) {
       <span className="text-xs text-muted-foreground">{label}</span>
       <span className="text-sm font-medium">{value}</span>
     </div>
+  )
+}
+
+function FavoriteCowCard({ id, temp, status, isActive, onClick }: { id: string, temp: number, status: string, isActive: boolean, onClick: () => void }) {
+  return (
+    <Card 
+      className={`p-3 glass-card cursor-pointer transition-all border-2 ${isActive ? 'border-primary bg-primary/10' : 'border-white/5 hover:border-primary/50'}`}
+      onClick={onClick}
+    >
+      <div className="flex justify-between items-start mb-1">
+        <p className="text-[10px] font-bold text-muted-foreground">COW #{id}</p>
+        <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
+      </div>
+      <div className="flex items-baseline gap-1">
+        <span className={`text-xl font-bold ${status === 'Critical' ? 'text-destructive animate-pulse' : 'text-foreground'}`}>
+          {temp.toFixed(1)}°C
+        </span>
+      </div>
+      <p className={`text-[9px] font-bold uppercase ${status === 'Critical' ? 'text-destructive' : 'text-primary'}`}>
+        {status}
+      </p>
+    </Card>
   )
 }

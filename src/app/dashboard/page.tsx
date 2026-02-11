@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from 'react'
@@ -22,7 +23,10 @@ import {
   Battery,
   ShieldAlert,
   Search,
-  LogOut
+  LogOut,
+  ShieldCheck,
+  MapPin,
+  Zap
 } from 'lucide-react'
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -173,7 +177,7 @@ export default function Dashboard() {
             <SnapshotCard title="In Heat" value="12" icon={<Activity className="text-secondary" />} trend="Sync tracking active" />
             <SnapshotCard title="Health Score" value="94%" icon={<ShieldAlert className="text-primary" />} trend="Above industry avg" />
             
-            <Card className="lg:col-span-4 glass-card p-6">
+            <Card className="lg:col-span-3 glass-card p-6">
               <CardHeader className="px-0">
                 <CardTitle className="text-lg">Recent Alerts Feed</CardTitle>
               </CardHeader>
@@ -183,6 +187,37 @@ export default function Dashboard() {
                 <AlertItem type="Low Rumination" cow="BW-098" time="1 hour ago" severity="Low" />
               </div>
             </Card>
+
+            <Card className="lg:col-span-1 glass-card p-6 flex flex-col justify-center text-center border-primary/20 bg-primary/5">
+              <div className="flex justify-center mb-4">
+                <div className="p-3 bg-primary/20 rounded-full">
+                  <ShieldCheck className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+              <h3 className="text-3xl font-bold text-primary mb-1">18 Cows</h3>
+              <p className="text-sm font-bold text-foreground mb-1 uppercase tracking-tighter">Recovered / Cured</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">Successfully Treated after Early Detection</p>
+            </Card>
+
+            <div className="lg:col-span-4 glass-card p-4 flex flex-wrap items-center gap-4 justify-center bg-secondary/5 border-secondary/10">
+              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mr-2">Deployed Sensor Tech Stack:</div>
+              <div className="flex items-center gap-2 px-3 py-1 bg-background/50 rounded-full border border-white/5">
+                <Thermometer className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-medium">DS18B20 (Thermal)</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1 bg-background/50 rounded-full border border-white/5">
+                <Activity className="h-3 w-3 text-secondary" />
+                <span className="text-[10px] font-medium">MPU6050 (Motion)</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1 bg-background/50 rounded-full border border-white/5">
+                <MapPin className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-medium">Neo-6M (GPS)</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1 bg-background/50 rounded-full border border-white/5">
+                <Zap className="h-3 w-3 text-secondary" />
+                <span className="text-[10px] font-medium">PulseOx</span>
+              </div>
+            </div>
           </TabsContent>
 
           {/* Tab 2: Health Alerts */}

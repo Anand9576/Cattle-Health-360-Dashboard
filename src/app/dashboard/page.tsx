@@ -60,14 +60,11 @@ export default function Dashboard() {
   const [emergencyMode, setEmergencyMode] = useState(false)
   const [liveActivity, setLiveActivity] = useState<any[]>([])
   const [staffList, setStaffList] = useState(staffListInitial)
-  const [currentTimestamp, setCurrentTimestamp] = useState<string>('')
 
   const cowProfileImg = PlaceHolderImages.find(img => img.id === 'cow-profile');
 
   // Live graph logic for Individual Health Tab
   useEffect(() => {
-    setCurrentTimestamp(new Date().toISOString())
-    
     const generateInitialData = () => {
       return Array.from({ length: 20 }, (_, i) => ({
         time: i,
@@ -88,7 +85,6 @@ export default function Dashboard() {
         }]
         return newData
       })
-      setCurrentTimestamp(new Date().toISOString())
     }, 1000)
 
     return () => clearInterval(interval)
@@ -163,7 +159,6 @@ export default function Dashboard() {
               <TabsTrigger value="kpis">Vitality KPIs</TabsTrigger>
               <TabsTrigger value="sensors">Sensor Status</TabsTrigger>
               <TabsTrigger value="health-check">Health Check</TabsTrigger>
-              <TabsTrigger value="telemetry">Live Telemetry</TabsTrigger>
               <TabsTrigger value="thermal">Thermal Analysis</TabsTrigger>
               <TabsTrigger value="staff">Staff & Emergency</TabsTrigger>
               <TabsTrigger value="individual">Individual Cow</TabsTrigger>
@@ -311,38 +306,7 @@ export default function Dashboard() {
             </Card>
           </TabsContent>
 
-          {/* Tab 6: Telemetry */}
-          <TabsContent value="telemetry" className="animate-in slide-in-from-bottom-5 duration-300">
-            <Card className="glass-card">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Raw Telemetry Stream</CardTitle>
-                  <CardDescription>Live JSON data from IoT packets</CardDescription>
-                </div>
-                <Badge variant="secondary" className="animate-pulse">LIVE STREAM</Badge>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-black/40 rounded-lg p-4 font-mono text-xs text-secondary overflow-x-auto">
-                  <pre>{`{
-  "timestamp": "${currentTimestamp || 'Initializing...'}",
-  "network": {
-    "gateway_id": "GW-99-NORTH",
-    "rssi": -74,
-    "snr": 8.5
-  },
-  "payload": [
-    { "id": "Tag-001", "temp": 38.5, "acc_x": 0.02, "acc_y": -0.01, "rum": 240 },
-    { "id": "Tag-002", "temp": 39.1, "acc_x": 0.45, "acc_y": 0.12, "rum": 110 },
-    { "id": "Tag-003", "temp": 38.2, "acc_x": 0.01, "acc_y": 0.00, "rum": 310 }
-  ],
-  "checksum": "0x4F22A1"
-}`}</pre>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab 7: Thermal */}
+          {/* Tab 6: Thermal */}
           <TabsContent value="thermal" className="space-y-6">
             <Card className="glass-card h-[400px]">
               <CardHeader>
@@ -372,7 +336,7 @@ export default function Dashboard() {
             </Card>
           </TabsContent>
 
-          {/* Tab 8: Staff */}
+          {/* Tab 7: Staff */}
           <TabsContent value="staff" className="space-y-6">
             <div className="flex items-center justify-between glass-card p-6 rounded-lg">
               <div>
@@ -416,7 +380,7 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
-          {/* Tab 9: Individual Health */}
+          {/* Tab 8: Individual Health */}
           <TabsContent value="individual" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="glass-card lg:col-span-1">

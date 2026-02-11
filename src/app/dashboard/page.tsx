@@ -41,11 +41,14 @@ import {
   SearchCode,
   CheckCircle,
   Database,
-  Radio
+  Radio,
+  TrendingUp,
+  TrendingDown,
+  Minus
 } from 'lucide-react'
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, BarChart, Bar, Legend
+  LineChart, Line, BarChart, Bar, Legend, ReferenceLine
 } from 'recharts'
 import { AIChat } from '@/components/dashboard/ai-chat'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
@@ -59,6 +62,42 @@ const herdThermalData = [
   { time: '16:00', avgTemp: 39.2 }, { time: '20:00', avgTemp: 38.8 },
   { time: '23:59', avgTemp: 38.6 }
 ]
+
+const cowPerformanceData: Record<string, any> = {
+  'BW-452': {
+    name: 'Sickly Heifer',
+    trend: 'Declining',
+    tempData: herdThermalData.map(d => ({ ...d, cowTemp: d.avgTemp + 1.2 + Math.random() * 0.4 })),
+    ruminationData: [
+      { day: 'Mon', mins: 460 }, { day: 'Tue', mins: 420 }, { day: 'Wed', mins: 350 }, { day: 'Thu', mins: 280 }, { day: 'Fri', mins: 210 }
+    ],
+    milkData: [
+      { day: '1', yield: 28 }, { day: '2', yield: 26 }, { day: '3', yield: 25 }, { day: '4', yield: 22 }, { day: '5', yield: 20 }, { day: '6', yield: 18 }, { day: '7', yield: 15 }
+    ]
+  },
+  'BW-103': {
+    name: 'Slow Mover',
+    trend: 'Stable',
+    tempData: herdThermalData.map(d => ({ ...d, cowTemp: d.avgTemp + 0.2 + Math.random() * 0.2 })),
+    ruminationData: [
+      { day: 'Mon', mins: 410 }, { day: 'Tue', mins: 405 }, { day: 'Wed', mins: 415 }, { day: 'Thu', mins: 400 }, { day: 'Fri', mins: 390 }
+    ],
+    milkData: [
+      { day: '1', yield: 30 }, { day: '2', yield: 29 }, { day: '3', yield: 31 }, { day: '4', yield: 30 }, { day: '5', yield: 30 }, { day: '6', yield: 31 }, { day: '7', yield: 30 }
+    ]
+  },
+  'BW-007': {
+    name: 'Star Performer',
+    trend: 'Improving',
+    tempData: herdThermalData.map(d => ({ ...d, cowTemp: d.avgTemp - 0.1 + Math.random() * 0.1 })),
+    ruminationData: [
+      { day: 'Mon', mins: 480 }, { day: 'Tue', mins: 490 }, { day: 'Wed', mins: 510 }, { day: 'Thu', mins: 520 }, { day: 'Fri', mins: 505 }
+    ],
+    milkData: [
+      { day: '1', yield: 32 }, { day: '2', yield: 33 }, { day: '3', yield: 34 }, { day: '4', yield: 35 }, { day: '5', yield: 37 }, { day: '6', yield: 38 }, { day: '7', yield: 40 }
+    ]
+  }
+}
 
 const staffListInitial = [
   { id: 1, name: 'Robert Smith', role: 'Head Herder', status: 'Active' },
@@ -205,6 +244,7 @@ export default function Dashboard() {
   const [liveActivity, setLiveActivity] = useState<any[]>([])
   const [staffList, setStaffList] = useState(staffListInitial)
   const [selectedCowId, setSelectedCowId] = useState('BW-452')
+  const [kpiSelectedCowId, setKpiSelectedCowId] = useState('BW-452')
   const [selectedHardwareTagId, setSelectedHardwareTagId] = useState('Tag-001')
   const [pulsingTemps, setPulsingTemps] = useState<{ [key: string]: number }>({ 'BW-452': 39.8, 'BW-103': 38.4 })
   const [liveComparisonData, setLiveComparisonData] = useState<any[]>([])
@@ -302,6 +342,7 @@ export default function Dashboard() {
   }
 
   const currentHardwareTag = hardwareTags.find(t => t.id === selectedHardwareTagId) || hardwareTags[0]
+  const currentKpiCow = cowPerformanceData[kpiSelectedCowId]
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden flex flex-col">
@@ -506,11 +547,133 @@ export default function Dashboard() {
 
           {/* Tab 3: Vitality KPIs */}
           <TabsContent value="kpis" className="space-y-6 animate-in slide-in-from-right-5 duration-300">
+            {/* Top Section: Herd Average Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <KPICard title="Avg Body Temp" value="38.5°C" subtitle="Normal range" icon={<Thermometer className="text-primary" />} chartColor="hsl(var(--primary))" />
               <KPICard title="Rumination Time" value="480m" subtitle="Avg / 24h" icon={<Activity className="text-secondary" />} chartColor="hsl(var(--secondary))" />
               <KPICard title="Milk Yield" value="32.4L" subtitle="Avg / animal" icon={<Milk className="text-primary" />} chartColor="hsl(var(--primary))" />
             </div>
+
+            {/* Middle Section: Dropdown Selector */}
+            <Card className="glass-card">
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="text-lg">Individual Performance Drill-Down</CardTitle>
+                  <CardDescription>Detailed telemetry analysis for specific livestock units</CardDescription>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">Analyze Specific Cow:</span>
+                  <Select value={kpiSelectedCowId} onValueChange={setKpiSelectedCowId}>
+                    <SelectTrigger className="w-[180px] bg-background/50 border-white/10">
+                      <SelectValue placeholder="Select Cow ID..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-white/10">
+                      <SelectItem value="BW-452">BW-452 (Sick)</SelectItem>
+                      <SelectItem value="BW-103">BW-103 (Lame)</SelectItem>
+                      <SelectItem value="BW-007">BW-007 (Star)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-500" key={kpiSelectedCowId}>
+                  {/* Graph A: Temperature Deviation */}
+                  <Card className="bg-muted/20 border-white/5">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-bold flex items-center gap-2">
+                        <Thermometer className="h-4 w-4 text-primary" />
+                        Temperature Deviation
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[200px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={currentKpiCow.tempData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                          <XAxis dataKey="time" hide />
+                          <YAxis domain={[37, 41]} stroke="#ffffff30" fontSize={10} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                          />
+                          <Line type="monotone" name="Cow Temp" dataKey="cowTemp" stroke="hsl(var(--destructive))" strokeWidth={2.5} dot={false} />
+                          <Line type="monotone" name="Herd Avg" dataKey="avgTemp" stroke="#ffffff30" strokeDasharray="5 5" strokeWidth={1.5} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+
+                  {/* Graph B: Rumination Activity */}
+                  <Card className="bg-muted/20 border-white/5">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-bold flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-secondary" />
+                        Rumination (5 Days)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[200px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={currentKpiCow.ruminationData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                          <XAxis dataKey="day" stroke="#ffffff30" fontSize={10} />
+                          <YAxis stroke="#ffffff30" fontSize={10} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                          />
+                          <ReferenceLine y={450} stroke="#10b981" strokeDasharray="3 3" label={{ position: 'top', value: '450m', fill: '#10b981', fontSize: 10 }} />
+                          <Bar 
+                            dataKey="mins" 
+                            radius={[4, 4, 0, 0]}
+                          >
+                            {currentKpiCow.ruminationData.map((entry: any, index: number) => (
+                              <cell key={`cell-${index}`} fill={entry.mins < 300 ? '#f59e0b' : 'hsl(var(--secondary))'} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+
+                  {/* Graph C: Milk Yield Consistency */}
+                  <Card className="bg-muted/20 border-white/5">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-bold flex items-center gap-2">
+                          <Milk className="h-4 w-4 text-primary" />
+                          Milk Yield (7 Days)
+                        </CardTitle>
+                        <div className="flex items-center gap-1 text-[10px] font-bold uppercase">
+                          {currentKpiCow.trend === 'Improving' && <TrendingUp className="h-3 w-3 text-primary" />}
+                          {currentKpiCow.trend === 'Declining' && <TrendingDown className="h-3 w-3 text-destructive" />}
+                          {currentKpiCow.trend === 'Stable' && <Minus className="h-3 w-3 text-secondary" />}
+                          <span className={
+                            currentKpiCow.trend === 'Improving' ? 'text-primary' : 
+                            (currentKpiCow.trend === 'Declining' ? 'text-destructive' : 'text-secondary')
+                          }>{currentKpiCow.trend}</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="h-[200px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={currentKpiCow.milkData}>
+                          <defs>
+                            <linearGradient id="milkGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4}/>
+                              <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                          <XAxis dataKey="day" hide />
+                          <YAxis stroke="#ffffff30" fontSize={10} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                          />
+                          <Area type="monotone" dataKey="yield" stroke="#8b5cf6" strokeWidth={2.5} fillOpacity={1} fill="url(#milkGradient)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
             <HealthLegend />
           </TabsContent>
 

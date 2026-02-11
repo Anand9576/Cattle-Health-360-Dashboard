@@ -1,3 +1,16 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "cattle-hero",
+      "description": "A high-tech digital representation of cattle",
+      "imageUrl": "https://images.unsplash.com/photo-1647146936178-f9c53782f07f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8ZGlnaXRhbCUyMGNhdHRsZXxlbnwwfHx8fDE3NzA4MTQ4MjB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "digital cattle"
+    },
+    {
+      "id": "cow-profile",
+      "description": "Individual cow profile image",
+      "imageUrl": "https://images.unsplash.com/photo-1527153857715-3908f2bae5e8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjb3clMjBmYWNlfGVufDB8fHx8MTc3MDgwMDU0OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cow face"
+    }
+  ]
 }

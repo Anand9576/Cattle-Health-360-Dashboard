@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
 import { 
   Activity, 
   AlertTriangle, 
@@ -26,7 +27,8 @@ import {
   LogOut,
   ShieldCheck,
   MapPin,
-  Zap
+  Zap,
+  Cpu
 } from 'lucide-react'
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -177,47 +179,50 @@ export default function Dashboard() {
             <SnapshotCard title="In Heat" value="12" icon={<Activity className="text-secondary" />} trend="Sync tracking active" />
             <SnapshotCard title="Health Score" value="94%" icon={<ShieldAlert className="text-primary" />} trend="Above industry avg" />
             
-            <Card className="lg:col-span-3 glass-card p-6">
-              <CardHeader className="px-0">
-                <CardTitle className="text-lg">Recent Alerts Feed</CardTitle>
+            <Card className="lg:col-span-3 glass-card flex flex-col">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Recent Alerts & System Health
+                </CardTitle>
+                <CardDescription>Live health feed merged with active sensor network status</CardDescription>
               </CardHeader>
-              <div className="space-y-4">
-                <AlertItem type="Fever" cow="BW-452" time="2 mins ago" severity="High" />
-                <AlertItem type="Geofence Exit" cow="BW-110" time="15 mins ago" severity="Medium" />
-                <AlertItem type="Low Rumination" cow="BW-098" time="1 hour ago" severity="Low" />
-              </div>
+              <CardContent className="space-y-6 flex-1">
+                <div className="space-y-3">
+                  <AlertItem type="Fever" cow="BW-452" time="2 mins ago" severity="High" />
+                  <AlertItem type="Geofence Exit" cow="BW-110" time="15 mins ago" severity="Medium" />
+                  <AlertItem type="Low Rumination" cow="BW-098" time="1 hour ago" severity="Low" />
+                </div>
+
+                <div className="pt-4 border-t border-white/5 space-y-3">
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    <Cpu className="h-3 w-3" />
+                    Deployed Sensor Tech Stack
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <TechBadge icon={<Thermometer />} label="DS18B20 (Thermal)" />
+                    <TechBadge icon={<Activity />} label="MPU6050 (Motion)" />
+                    <TechBadge icon={<MapPin />} label="Neo-6M (GPS)" />
+                    <TechBadge icon={<Zap />} label="PulseOx (SpO2)" />
+                  </div>
+                </div>
+              </CardContent>
             </Card>
 
-            <Card className="lg:col-span-1 glass-card p-6 flex flex-col justify-center text-center border-primary/20 bg-primary/5">
+            <Card className="lg:col-span-1 glass-card p-6 flex flex-col justify-center text-center border-primary/20 bg-primary/5 min-h-[300px]">
               <div className="flex justify-center mb-4">
-                <div className="p-3 bg-primary/20 rounded-full">
-                  <ShieldCheck className="h-8 w-8 text-primary" />
+                <div className="p-4 bg-primary/20 rounded-full neon-border-emerald">
+                  <ShieldCheck className="h-10 w-10 text-primary" />
                 </div>
               </div>
-              <h3 className="text-3xl font-bold text-primary mb-1">18 Cows</h3>
-              <p className="text-sm font-bold text-foreground mb-1 uppercase tracking-tighter">Recovered / Cured</p>
-              <p className="text-[10px] text-muted-foreground leading-tight">Successfully Treated after Early Detection</p>
+              <h3 className="text-4xl font-bold text-primary mb-1">18 Cows</h3>
+              <p className="text-lg font-bold text-foreground mb-1 uppercase tracking-tighter">Recovered / Cured</p>
+              <p className="text-sm text-muted-foreground leading-snug px-4">Successfully Treated after Early Detection via IoT Telemetry</p>
+              <div className="mt-6 flex items-center justify-center gap-2">
+                <Badge variant="outline" className="text-primary border-primary/30">Verified</Badge>
+                <Badge variant="outline" className="text-primary border-primary/30">Healthy</Badge>
+              </div>
             </Card>
-
-            <div className="lg:col-span-4 glass-card p-4 flex flex-wrap items-center gap-4 justify-center bg-secondary/5 border-secondary/10">
-              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mr-2">Deployed Sensor Tech Stack:</div>
-              <div className="flex items-center gap-2 px-3 py-1 bg-background/50 rounded-full border border-white/5">
-                <Thermometer className="h-3 w-3 text-primary" />
-                <span className="text-[10px] font-medium">DS18B20 (Thermal)</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1 bg-background/50 rounded-full border border-white/5">
-                <Activity className="h-3 w-3 text-secondary" />
-                <span className="text-[10px] font-medium">MPU6050 (Motion)</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1 bg-background/50 rounded-full border border-white/5">
-                <MapPin className="h-3 w-3 text-primary" />
-                <span className="text-[10px] font-medium">Neo-6M (GPS)</span>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1 bg-background/50 rounded-full border border-white/5">
-                <Zap className="h-3 w-3 text-secondary" />
-                <span className="text-[10px] font-medium">PulseOx</span>
-              </div>
-            </div>
           </TabsContent>
 
           {/* Tab 2: Health Alerts */}
@@ -516,6 +521,17 @@ function SnapshotCard({ title, value, icon, trend, color = "text-primary" }: any
         </p>
       </CardContent>
     </Card>
+  )
+}
+
+function TechBadge({ icon, label }: { icon: React.ReactNode, label: string }) {
+  return (
+    <div className="flex items-center gap-2 px-2.5 py-1 bg-background/50 rounded-full border border-white/5 hover:border-primary/30 transition-colors">
+      <div className="text-primary child-svg-h-3 child-svg-w-3 [&_svg]:h-3 [&_svg]:w-3">
+        {icon}
+      </div>
+      <span className="text-[10px] font-medium">{label}</span>
+    </div>
   )
 }
 

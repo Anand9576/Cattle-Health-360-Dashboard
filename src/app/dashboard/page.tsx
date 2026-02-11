@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useMemo } from 'react'
@@ -9,6 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { 
   Select,
   SelectContent,
@@ -43,7 +52,8 @@ import {
   Radio,
   TrendingUp,
   TrendingDown,
-  Minus
+  Minus,
+  Clock
 } from 'lucide-react'
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -53,6 +63,7 @@ import { AIChat } from '@/components/dashboard/ai-chat'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { PlaceHolderImages } from '@/lib/placeholder-images'
 import { Progress } from '@/components/ui/progress'
+import { useToast } from '@/hooks/use-toast'
 
 // Static Data
 const herdThermalData = [
@@ -106,7 +117,7 @@ const cowPerformanceData: Record<string, any> = {
 
 const staffListInitial = [
   { id: 1, name: 'Robert Smith', role: 'Head Herder', status: 'Active' },
-  { id: 2, name: 'Karla Davis', role: 'Veterinarian', status: 'On-Call' },
+  { id: 2, name: 'Dr. Steve Wilson', role: 'Veterinarian', status: 'On-Call' },
   { id: 3, name: 'James Wilson', role: 'IoT Tech', status: 'Active' },
   { id: 4, name: 'Maria Garcia', role: 'Nutritionist', status: 'On-Call' },
   { id: 5, name: 'David Lee', role: 'Emergency Lead', status: 'Active' },
@@ -198,7 +209,11 @@ const detailedAlerts = [
     time: '2 mins ago', 
     severity: 'Medium', 
     needsAttention: true,
-    icon: <Activity className="h-5 w-5" />
+    icon: <Activity className="h-5 w-5" />,
+    currentVal: '15 steps/min',
+    threshold: '50 steps/min',
+    location: 'North Pasture (Sector B)',
+    duration: '45 mins'
   },
   { 
     id: 'BW-102', 
@@ -207,7 +222,11 @@ const detailedAlerts = [
     time: '10 mins ago', 
     severity: 'High', 
     needsVet: true,
-    icon: <Thermometer className="h-5 w-5" />
+    icon: <Thermometer className="h-5 w-5" />,
+    currentVal: '39.8°C',
+    threshold: '39.2°C',
+    location: 'Milking Bay 4',
+    duration: '15 mins'
   },
   { 
     id: 'BW-103', 
@@ -215,7 +234,11 @@ const detailedAlerts = [
     description: 'All vitals within normal range', 
     time: '25 mins ago', 
     severity: 'Low', 
-    icon: <ShieldCheck className="h-5 w-5" />
+    icon: <ShieldCheck className="h-5 w-5" />,
+    currentVal: '38.4°C',
+    threshold: '39.2°C',
+    location: 'South Barn',
+    duration: 'N/A'
   },
   { 
     id: 'BW-104', 
@@ -224,7 +247,11 @@ const detailedAlerts = [
     time: '1 min ago', 
     severity: 'Critical', 
     needsVet: true,
-    icon: <ShieldAlert className="h-5 w-5" />
+    icon: <ShieldAlert className="h-5 w-5" />,
+    currentVal: '40.5°C',
+    threshold: '39.5°C',
+    location: 'Infirmary Wing',
+    duration: '1 hour'
   },
   { 
     id: 'BW-105', 
@@ -232,13 +259,19 @@ const detailedAlerts = [
     description: 'Approaching pasture boundary', 
     time: '45 mins ago', 
     severity: 'Medium', 
-    icon: <MapPin className="h-5 w-5" />
+    icon: <MapPin className="h-5 w-5" />,
+    currentVal: '5m from gate',
+    threshold: '10m',
+    location: 'East Perimeter Line',
+    duration: '5 mins'
   },
 ]
 
 export default function Dashboard() {
-  const [emergencyMode, setEmergencyMode] = useState(false)
+  const { toast } = useToast()
+  const [activeTab, setActiveTab] = useState('snapshot')
   const [monitorType, setMonitorType] = useState('Cows')
+  const [emergencyMode, setEmergencyMode] = useState(false)
   const [liveActivity, setLiveActivity] = useState<any[]>([])
   const [staffList, setStaffList] = useState(staffListInitial)
   const [selectedCowId, setSelectedCowId] = useState('BW-452')
@@ -247,6 +280,9 @@ export default function Dashboard() {
   const [pulsingTemps, setPulsingTemps] = useState<{ [key: string]: number }>({ 'BW-452': 39.8, 'BW-103': 38.4 })
   const [liveComparisonData, setLiveComparisonData] = useState<any[]>([])
   const [hardwareJitter, setHardwareJitter] = useState({ temp: 0, accel: 0, signal: 0, heart: 0 })
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false)
+  const [selectedAlertForModal, setSelectedAlertForModal] = useState<any>(null)
+  const [highlightVet, setHighlightVet] = useState(false)
 
   const cowProfileImg = PlaceHolderImages.find(img => img.id === 'cow-profile');
 
@@ -341,6 +377,22 @@ export default function Dashboard() {
     link.click()
   }
 
+  const openAlertDetails = (alert: any) => {
+    setSelectedAlertForModal(alert)
+    setIsAlertModalOpen(true)
+  }
+
+  const handleCallVetFromModal = () => {
+    setIsAlertModalOpen(false)
+    toast({
+      title: "Navigation Request",
+      description: "🔄 Switching to Staff & Emergency to initiate call...",
+    })
+    setActiveTab('staff')
+    setHighlightVet(true)
+    setTimeout(() => setHighlightVet(false), 3000)
+  }
+
   const currentHardwareTag = hardwareTags.find(t => t.id === selectedHardwareTagId) || hardwareTags[0]
   const currentKpiCow = cowPerformanceData[kpiSelectedCowId]
 
@@ -404,7 +456,7 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="flex-1 p-6 space-y-6">
-        <Tabs defaultValue="snapshot" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <ScrollArea className="w-full whitespace-nowrap">
               <TabsList className="bg-muted/50 p-1 inline-flex">
@@ -528,12 +580,32 @@ export default function Dashboard() {
                           </div>
                           <div className="flex items-center gap-2">
                             {alert.needsVet && (
-                              <Button size="sm" variant="default" className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold gap-2">
+                              <Button 
+                                size="sm" 
+                                variant="default" 
+                                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold gap-2"
+                                onClick={() => {
+                                  toast({
+                                    title: "Emergency Redirect",
+                                    description: "🔄 Switching to Staff & Emergency to initiate call...",
+                                  })
+                                  setActiveTab('staff')
+                                  setHighlightVet(true)
+                                  setTimeout(() => setHighlightVet(false), 3000)
+                                }}
+                              >
                                 <Phone className="h-3 w-3" />
                                 Call Vet
                               </Button>
                             )}
-                            <Button variant="link" size="sm" className="h-auto p-0 text-primary group-hover:underline">View Details</Button>
+                            <Button 
+                              variant="link" 
+                              size="sm" 
+                              className="h-auto p-0 text-primary group-hover:underline"
+                              onClick={() => openAlertDetails(alert)}
+                            >
+                              View Details
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -867,7 +939,12 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {staffList.map(staff => (
-                <Card key={staff.id} className="glass-card overflow-hidden group">
+                <Card 
+                  key={staff.id} 
+                  className={`glass-card overflow-hidden group transition-all duration-500 ${
+                    highlightVet && staff.role === 'Veterinarian' ? 'ring-2 ring-destructive animate-pulse bg-destructive/10' : ''
+                  }`}
+                >
                   <CardHeader className="flex flex-row items-center gap-4">
                     <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center text-lg font-bold border border-white/10">
                       {staff.name.split(' ').map(n => n[0]).join('')}
@@ -881,7 +958,13 @@ export default function Dashboard() {
                     <Badge variant={staff.status === 'Active' || staff.status === 'Alerted/Active' ? 'default' : 'secondary'}>
                       {staff.status}
                     </Badge>
-                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">Contact</Button>
+                    <Button 
+                      variant={highlightVet && staff.role === 'Veterinarian' ? 'destructive' : 'ghost'} 
+                      size="sm" 
+                      className={`${highlightVet && staff.role === 'Veterinarian' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}
+                    >
+                      Contact
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -1115,6 +1198,89 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
       </main>
+
+      <Dialog open={isAlertModalOpen} onOpenChange={setIsAlertModalOpen}>
+        <DialogContent className="glass-card border-white/10 sm:max-w-[500px]">
+          {selectedAlertForModal && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`p-2 rounded-lg ${
+                    selectedAlertForModal.severity === 'Critical' ? 'bg-destructive/20 text-destructive' :
+                    selectedAlertForModal.type === 'Geofence' ? 'bg-orange-500/20 text-orange-500' :
+                    'bg-secondary/20 text-secondary'
+                  }`}>
+                    {selectedAlertForModal.icon}
+                  </div>
+                  <div>
+                    <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                      {selectedAlertForModal.type.toUpperCase()} DETECTED
+                      <Badge variant="outline" className="text-[10px]">{selectedAlertForModal.severity}</Badge>
+                    </DialogTitle>
+                    <DialogDescription className="text-muted-foreground">
+                      Investigation Report for Cow #{selectedAlertForModal.id}
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="grid gap-6 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-muted/40 rounded-xl border border-white/5">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Current Value</p>
+                    <p className="text-2xl font-bold text-foreground">{selectedAlertForModal.currentVal}</p>
+                  </div>
+                  <div className="p-4 bg-muted/40 rounded-xl border border-white/5">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Alert Threshold</p>
+                    <p className="text-2xl font-bold text-muted-foreground">{selectedAlertForModal.threshold}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="p-2 bg-primary/10 rounded-full">
+                      <MapPin className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">Last Tracked Location</p>
+                      <p className="font-medium">{selectedAlertForModal.location}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="p-2 bg-secondary/10 rounded-full">
+                      <Clock className="h-4 w-4 text-secondary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">Active Duration</p>
+                      <p className="font-medium">{selectedAlertForModal.duration}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl flex items-start gap-3">
+                  <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Automated diagnosis suggests monitoring vitals over the next hour. If values remain above threshold, immediate veterinary intervention is required.
+                  </p>
+                </div>
+              </div>
+
+              <DialogFooter className="flex-col sm:flex-row gap-3">
+                <Button variant="outline" onClick={() => setIsAlertModalOpen(false)} className="flex-1">
+                  Dismiss Alert
+                </Button>
+                <Button 
+                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+                  onClick={handleCallVetFromModal}
+                >
+                  Call Vet / Notify
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AIChat />
 

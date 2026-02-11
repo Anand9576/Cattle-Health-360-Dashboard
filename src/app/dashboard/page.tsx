@@ -122,23 +122,32 @@ export default function Dashboard() {
   const [liveActivity, setLiveActivity] = useState<any[]>([])
   const [staffList, setStaffList] = useState(staffListInitial)
   const [selectedCowId, setSelectedCowId] = useState('BW-452')
-  const [pulsingTemps, setPulsingTemps] = useState({ 'BW-452': 39.8, 'BW-103': 38.4 })
+  const [pulsingTemps, setPulsingTemps] = useState<{ [key: string]: number }>({ 'BW-452': 39.8, 'BW-103': 38.4 })
+  const [liveComparisonData, setLiveComparisonData] = useState<any[]>([])
 
   const cowProfileImg = PlaceHolderImages.find(img => img.id === 'cow-profile');
 
-  // Live graph logic for Individual Health Tab
+  // Status and Color mapping
+  const getCowHealthInfo = (id: string) => {
+    if (id === 'BW-452') return { status: 'Critical', color: 'hsl(var(--destructive))' }
+    if (id === 'BW-103') return { status: 'Attention Required', color: 'hsl(var(--secondary))' }
+    return { status: 'Stable', color: 'hsl(var(--primary))' }
+  }
+
+  const selectedCowInfo = getCowHealthInfo(selectedCowId)
+
+  // Live graph logic
   useEffect(() => {
-    const generateInitialData = () => {
-      return Array.from({ length: 20 }, (_, i) => ({
-        time: i,
-        walking: 30 + Math.random() * 20,
-        eating: 10 + Math.random() * 30,
-        sleeping: 5 + Math.random() * 10
-      }))
-    }
-    setLiveActivity(generateInitialData())
+    // Initial data generation
+    setLiveActivity(Array.from({ length: 20 }, (_, i) => ({
+      time: i,
+      walking: 30 + Math.random() * 20,
+      eating: 10 + Math.random() * 30,
+      sleeping: 5 + Math.random() * 10
+    })))
 
     const interval = setInterval(() => {
+      // 1. Motion Feed Update
       setLiveActivity(prev => {
         const newData = [...prev.slice(1), {
           time: prev[prev.length - 1].time + 1,
@@ -149,15 +158,37 @@ export default function Dashboard() {
         return newData
       })
       
-      // Pulse temps for favorites
+      // 2. Priority Monitoring Pulses
       setPulsingTemps(prev => ({
         'BW-452': 39.5 + Math.random() * 0.6,
-        'BW-103': 38.2 + Math.random() * 0.4
+        'BW-103': 38.2 + Math.random() * 0.8
       }))
+
+      // 3. Dynamic Comparison Data Update
+      setLiveComparisonData(() => {
+        return herdThermalData.map(item => {
+          const deviation = selectedCowId === 'BW-452' ? 0.8 : (selectedCowId === 'BW-103' ? 0.4 : -0.1);
+          return {
+            ...item,
+            cowTemp: item.avgTemp + (Math.random() * 0.4) + deviation
+          }
+        })
+      })
     }, 2000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [selectedCowId])
+
+  // Sync initial comparison data
+  useEffect(() => {
+    setLiveComparisonData(herdThermalData.map(item => {
+      const deviation = selectedCowId === 'BW-452' ? 0.8 : (selectedCowId === 'BW-103' ? 0.4 : -0.1);
+      return {
+        ...item,
+        cowTemp: item.avgTemp + deviation
+      }
+    }))
+  }, [selectedCowId])
 
   useEffect(() => {
     if (emergencyMode) {
@@ -176,16 +207,6 @@ export default function Dashboard() {
     document.body.appendChild(link)
     link.click()
   }
-
-  const individualComparisonData = useMemo(() => {
-    return herdThermalData.map(item => {
-      const deviation = selectedCowId === 'BW-452' ? 0.8 : (selectedCowId === 'BW-103' ? -0.2 : 0.1);
-      return {
-        ...item,
-        cowTemp: item.avgTemp + (Math.random() * 0.4) + deviation
-      }
-    })
-  }, [selectedCowId])
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden flex flex-col">
@@ -515,7 +536,7 @@ export default function Dashboard() {
                   <FavoriteCowCard 
                     id="BW-103" 
                     temp={pulsingTemps['BW-103']} 
-                    status="Stable" 
+                    status="Attention Required" 
                     isActive={selectedCowId === 'BW-103'}
                     onClick={() => setSelectedCowId('BW-103')}
                   />
@@ -537,9 +558,9 @@ export default function Dashboard() {
                         </SelectTrigger>
                         <SelectContent className="bg-card border-white/10">
                           <SelectItem value="BW-452">BW-452 (Critical)</SelectItem>
-                          <SelectItem value="BW-103">BW-103 (Lameness)</SelectItem>
-                          <SelectItem value="BW-089">BW-089 (Standard)</SelectItem>
-                          <SelectItem value="BW-007">BW-007 (Elite)</SelectItem>
+                          <SelectItem value="BW-103">BW-103 (Attention Req.)</SelectItem>
+                          <SelectItem value="BW-089">BW-089 (Stable)</SelectItem>
+                          <SelectItem value="BW-007">BW-007 (Stable)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -550,7 +571,7 @@ export default function Dashboard() {
                       </p>
                       <p className="text-xs mt-1 leading-snug">
                         Currently analyzing telemetry for <span className="text-primary font-bold">#{selectedCowId}</span>. 
-                        Cross-referencing with herd baseline...
+                        Status: <span style={{ color: selectedCowInfo.color }} className="font-bold">{selectedCowInfo.status}</span>
                       </p>
                     </div>
                   </CardContent>
@@ -571,7 +592,7 @@ export default function Dashboard() {
                 <CardContent>
                   <div className="h-[350px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={individualComparisonData}>
+                      <LineChart data={liveComparisonData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
                         <XAxis dataKey="time" stroke="#ffffff30" fontSize={10} />
                         <YAxis domain={[37, 41]} stroke="#ffffff30" fontSize={10} />
@@ -583,10 +604,12 @@ export default function Dashboard() {
                           type="monotone" 
                           name={`Cow #${selectedCowId} Temp`} 
                           dataKey="cowTemp" 
-                          stroke="hsl(var(--destructive))" 
+                          stroke={selectedCowInfo.color} 
                           strokeWidth={3} 
-                          dot={{ r: 4, fill: 'hsl(var(--destructive))' }} 
+                          dot={{ r: 4, fill: selectedCowInfo.color }} 
                           activeDot={{ r: 6 }}
+                          isAnimationActive={true}
+                          animationDuration={500}
                         />
                         <Line 
                           type="monotone" 
@@ -862,6 +885,8 @@ function DetailRow({ label, value }: { label: string, value: string }) {
 }
 
 function FavoriteCowCard({ id, temp, status, isActive, onClick }: { id: string, temp: number, status: string, isActive: boolean, onClick: () => void }) {
+  const colorClass = status === 'Critical' ? 'text-destructive' : (status === 'Attention Required' ? 'text-secondary' : 'text-primary')
+  
   return (
     <Card 
       className={`p-3 glass-card cursor-pointer transition-all border-2 ${isActive ? 'border-primary bg-primary/10' : 'border-white/5 hover:border-primary/50'}`}
@@ -873,10 +898,10 @@ function FavoriteCowCard({ id, temp, status, isActive, onClick }: { id: string, 
       </div>
       <div className="flex items-baseline gap-1">
         <span className={`text-xl font-bold ${status === 'Critical' ? 'text-destructive animate-pulse' : 'text-foreground'}`}>
-          {temp.toFixed(1)}°C
+          {temp?.toFixed(1) || '--'}°C
         </span>
       </div>
-      <p className={`text-[9px] font-bold uppercase ${status === 'Critical' ? 'text-destructive' : 'text-primary'}`}>
+      <p className={`text-[9px] font-bold uppercase ${colorClass}`}>
         {status}
       </p>
     </Card>

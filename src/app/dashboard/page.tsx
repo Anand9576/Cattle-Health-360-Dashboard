@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useMemo } from 'react'
@@ -37,7 +38,10 @@ import {
   Cpu,
   Phone,
   ArrowUpRight,
-  SearchCode
+  SearchCode,
+  CheckCircle,
+  Database,
+  Radio
 } from 'lucide-react'
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -46,6 +50,7 @@ import {
 import { AIChat } from '@/components/dashboard/ai-chat'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { PlaceHolderImages } from '@/lib/placeholder-images'
+import { Progress } from '@/components/ui/progress'
 
 // Static Data
 const herdThermalData = [
@@ -258,7 +263,7 @@ export default function Dashboard() {
                 <TabsTrigger value="snapshot">Herd Snapshot</TabsTrigger>
                 <TabsTrigger value="alerts">Health Alerts</TabsTrigger>
                 <TabsTrigger value="kpis">Vitality KPIs</TabsTrigger>
-                <TabsTrigger value="sensors">Sensor Status</TabsTrigger>
+                <TabsTrigger value="sensors">Hardware Inspector</TabsTrigger>
                 <TabsTrigger value="health-check">Health Check</TabsTrigger>
                 <TabsTrigger value="thermal">Thermal Analysis</TabsTrigger>
                 <TabsTrigger value="staff">Staff & Emergency</TabsTrigger>
@@ -327,7 +332,7 @@ export default function Dashboard() {
                   <Card className="lg:col-span-1 glass-card p-6 flex flex-col justify-center text-center border-primary/20 bg-primary/5 min-h-[300px]">
                     <div className="flex justify-center mb-4">
                       <div className="p-4 bg-primary/20 rounded-full neon-border-emerald">
-                        <ShieldCheck className="h-10 w-10 text-primary" />
+                        <CheckCircle className="h-10 w-10 text-primary" />
                       </div>
                     </div>
                     <h3 className="text-4xl font-bold text-primary mb-1">18 Cows</h3>
@@ -375,7 +380,7 @@ export default function Dashboard() {
                           <p className="font-bold tracking-tight">Cow #{alert.id}</p>
                           <Badge variant={
                             alert.severity === 'Critical' ? 'destructive' : 
-                            alert.type === 'Geofence' ? 'secondary' : // Will look orange with custom class if needed
+                            alert.type === 'Geofence' ? 'secondary' :
                             alert.severity === 'Medium' || alert.needsAttention ? 'secondary' :
                             'outline'
                           } className={`text-[10px] py-0 ${alert.type === 'Geofence' ? 'bg-orange-500/20 text-orange-500 border-orange-500/30' : ''}`}>
@@ -419,32 +424,99 @@ export default function Dashboard() {
             <HealthLegend />
           </TabsContent>
 
-          {/* Tab 4: Sensor Status */}
-          <TabsContent value="sensors" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <Card className="glass-card">
-                  <CardHeader>
-                    <CardTitle>Network Gateways</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <GatewayStatus name="North Pasture Hub" status="Online" signal={92} />
-                    <GatewayStatus name="South Barn Bridge" status="Online" signal={78} />
-                    <GatewayStatus name="Feeding Area Gateway" status="Offline" signal={0} />
-                  </CardContent>
-               </Card>
-               <Card className="glass-card">
-                  <CardHeader>
-                    <CardTitle>Battery Health Distribution</CardTitle>
-                  </CardHeader>
-                  <CardContent className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={[{n: 'Low', v: 12}, {n: 'Med', v: 45}, {n: 'Good', v: 156}]}>
-                        <Bar dataKey="v" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                        <XAxis dataKey="n" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-               </Card>
+          {/* Tab 4: Hardware Inspector */}
+          <TabsContent value="sensors" className="space-y-6 animate-in fade-in duration-500">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column: Device Profile */}
+              <Card className="lg:col-span-1 bg-slate-900/80 border-white/10 shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <Cpu className="h-48 w-48 text-white rotate-12" />
+                </div>
+                <CardHeader className="relative z-10 pb-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-2 bg-primary/20 rounded-md">
+                      <Zap className="h-5 w-5 text-primary" />
+                    </div>
+                    <Badge variant="outline" className="border-primary/30 text-primary text-[10px]">Active Node</Badge>
+                  </div>
+                  <CardTitle className="text-2xl font-bold tracking-tight text-white font-headline">Smart Collar Tag (Pro)</CardTitle>
+                </CardHeader>
+                <CardContent className="relative z-10 space-y-6">
+                  <div className="space-y-4 pt-4">
+                    <HardwareStat label="Model Name" value="CH-360-X1" />
+                    <HardwareStat label="Firmware Version" value="v2.4.1 (Stable)" isMono />
+                    <HardwareStat 
+                      label="Power Source" 
+                      value="3.7V LiPo (3000mAh)" 
+                      icon={<Battery className="h-3 w-3 text-primary" />} 
+                    />
+                    <HardwareStat label="Last Calibration" value="2026-01-10" />
+                    <HardwareStat 
+                      label="Gateway Connection" 
+                      value="Signal: -42 dBm (Strong)" 
+                      valueClass="text-secondary font-bold" 
+                    />
+                  </div>
+                  
+                  <div className="p-4 bg-background/40 rounded-lg border border-white/5 mt-6">
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase mb-3 tracking-widest">Antenna Integrity</p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-[10px] mb-1">
+                        <span>LoRa Uplink</span>
+                        <span className="text-primary">98%</span>
+                      </div>
+                      <Progress value={98} className="h-1 bg-white/5" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Right Column: Module Grid */}
+              <div className="lg:col-span-2 space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Active Sensor Modules</h3>
+                  <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary font-mono text-[10px]">4 Modules Detected</Badge>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <SensorModuleCard 
+                    name="Accelerometer (MPU6050)"
+                    status="Operational"
+                    statusType="success"
+                    description="3-axis movement tracking for lameness & rumination."
+                    readout="X:0.02 Y:0.98 Z:0.15"
+                    health={100}
+                    icon={<Activity className="h-4 w-4" />}
+                  />
+                  <SensorModuleCard 
+                    name="Thermal Probe (DS18B20)"
+                    status="Operational"
+                    statusType="success"
+                    description="Core body temperature monitoring."
+                    readout="38.9°C"
+                    health={99}
+                    icon={<Thermometer className="h-4 w-4" />}
+                  />
+                  <SensorModuleCard 
+                    name="Heart Rate (Pulse/SpO2)"
+                    status="Calibrating..."
+                    statusType="warning"
+                    description="Optical photoplethysmography sensor."
+                    readout="-- BPM"
+                    health={85}
+                    isBlinking
+                    icon={<Zap className="h-4 w-4" />}
+                  />
+                  <SensorModuleCard 
+                    name="Transceiver (SX1276 LoRa)"
+                    status="Sending..."
+                    statusType="info"
+                    description="Long-range telemetry uplink."
+                    readout="SF7 / 868MHz"
+                    health={95}
+                    icon={<Radio className="h-4 w-4" />}
+                  />
+                </div>
+              </div>
             </div>
           </TabsContent>
 
@@ -800,19 +872,20 @@ export default function Dashboard() {
 // Subcomponents
 function HealthLegend() {
   return (
-    <Card className="glass-card p-4 border-l-4 border-l-primary">
-      <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground">
-        <div className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full bg-primary" /> Healthy / Normal</div>
-        <div className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full bg-destructive" /> Critical Alert</div>
-        <div className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full bg-orange-400" /> Geofence Alert</div>
-        <div className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full bg-secondary" /> Attention Required</div>
-      </div>
-    </Card>
+    <div className="flex justify-center w-full">
+      <Card className="glass-card p-4 border-l-4 border-l-primary inline-block">
+        <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full bg-primary" /> Healthy / Normal</div>
+          <div className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full bg-destructive" /> Critical Alert</div>
+          <div className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full bg-orange-400" /> Geofence Alert</div>
+          <div className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full bg-secondary" /> Attention Required</div>
+        </div>
+      </Card>
+    </div>
   )
 }
 
 function SnapshotCard({ title, value, icon, trend, color = "text-primary" }: any) {
-  // User requested "In Heat" to be blue
   const finalColor = title === 'In Heat' ? 'text-secondary' : color;
 
   return (
@@ -846,7 +919,6 @@ function KPICard({ title, value, subtitle, icon, chartColor }: any) {
   const [chartData, setChartData] = useState<any[]>([])
 
   useEffect(() => {
-    // Hydration mismatch prevention
     setChartData(Array.from({length: 12}, () => ({v: 5 + Math.random() * 5})))
 
     const interval = setInterval(() => {
@@ -889,26 +961,6 @@ function KPICard({ title, value, subtitle, icon, chartColor }: any) {
   )
 }
 
-function GatewayStatus({ name, status, signal }: any) {
-  return (
-    <div className="flex items-center justify-between p-3 border border-white/5 rounded-lg">
-      <div className="flex items-center gap-3">
-        <Wifi className={`h-4 w-4 ${status === 'Online' ? 'text-primary' : 'text-muted-foreground'}`} />
-        <div>
-          <p className="text-sm font-medium">{name}</p>
-          <p className="text-[10px] text-muted-foreground">{status}</p>
-        </div>
-      </div>
-      <div className="text-right">
-        <p className="text-xs font-mono">{signal}%</p>
-        <div className="w-16 h-1 bg-muted rounded-full mt-1">
-          <div className="h-full bg-primary rounded-full" style={{ width: `${signal}%` }} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function AlertItem({ type, cow, time, severity }: any) {
   const isGeofence = type.includes('Geofence') || type === 'Geofence Exit';
   
@@ -918,7 +970,6 @@ function AlertItem({ type, cow, time, severity }: any) {
     Low: 'text-primary border-primary/20 bg-primary/5'
   }[severity as 'High'|'Medium'|'Low']
 
-  // Geofence must be orange
   const finalSeverityColor = isGeofence ? 'text-orange-400 border-orange-400/20 bg-orange-400/5' : severityColor;
 
   return (
@@ -964,6 +1015,68 @@ function FavoriteCowCard({ id, temp, status, isActive, onClick }: { id: string, 
       <p className={`text-[9px] font-bold uppercase ${colorClass}`}>
         {status}
       </p>
+    </Card>
+  )
+}
+
+function HardwareStat({ label, value, isMono, icon, valueClass }: any) {
+  return (
+    <div className="flex items-center justify-between py-1 border-b border-white/5">
+      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
+      <div className="flex items-center gap-2">
+        {icon}
+        <span className={`text-xs font-bold ${isMono ? 'font-mono' : ''} ${valueClass || 'text-white'}`}>{value}</span>
+      </div>
+    </div>
+  )
+}
+
+function SensorModuleCard({ name, status, statusType, description, readout, health, icon, isBlinking }: any) {
+  const statusColors = {
+    success: 'bg-primary text-primary-foreground',
+    warning: 'bg-amber-500 text-white',
+    info: 'bg-secondary text-secondary-foreground',
+    destructive: 'bg-destructive text-white'
+  }
+
+  const pulseColors = {
+    success: 'bg-primary',
+    warning: 'bg-amber-500',
+    info: 'bg-secondary',
+    destructive: 'bg-destructive'
+  }
+
+  return (
+    <Card className="bg-[#0f172a] border-white/10 hover:border-white/20 transition-all p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-white/5 rounded-md text-white/70">
+            {icon}
+          </div>
+          <span className="text-[10px] font-bold text-white uppercase tracking-tighter">{name}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`h-2 w-2 rounded-full ${pulseColors[statusType as keyof typeof pulseColors]} ${isBlinking || statusType !== 'destructive' ? 'animate-pulse' : ''}`} />
+          <span className={`text-[9px] font-bold uppercase tracking-widest ${statusType === 'warning' ? 'text-amber-500' : (statusType === 'info' ? 'text-secondary' : 'text-primary')}`}>
+            {status}
+          </span>
+        </div>
+      </div>
+      
+      <div>
+        <p className="text-[10px] text-muted-foreground leading-snug">{description}</p>
+        <div className="mt-3 py-2 px-3 bg-black/40 rounded border border-white/5 flex items-center justify-center">
+          <span className="font-mono text-xs text-primary/90 font-bold tracking-widest">{readout}</span>
+        </div>
+      </div>
+
+      <div className="space-y-1.5 pt-1">
+        <div className="flex justify-between text-[9px] text-muted-foreground">
+          <span>MODULE INTEGRITY</span>
+          <span className="font-bold">{health}%</span>
+        </div>
+        <Progress value={health} className="h-1 bg-white/5" />
+      </div>
     </Card>
   )
 }

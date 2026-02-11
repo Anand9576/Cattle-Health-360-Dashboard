@@ -1,7 +1,7 @@
 # 🐄 Cattle Health 360
 
 A modern, IoT-enabled livestock monitoring dashboard built with Next.js.
-- Live site:
+- Live site: https://cattle-health-360-dashboard.vercel.app
 
 -------
 
@@ -24,7 +24,7 @@ Cattle Health 360 is a responsive, frontend-only prototype that provides a unifi
 
 ## 🌐 Live Demo
 
-👉 
+👉 https://cattle-health-360-dashboard.vercel.app
 
 ------
 

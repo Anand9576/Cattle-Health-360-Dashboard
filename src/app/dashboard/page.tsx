@@ -112,7 +112,7 @@ const detailedAlerts = [
     type: 'Geofence', 
     description: 'Approaching pasture boundary', 
     time: '45 mins ago', 
-    severity: 'Low', 
+    severity: 'Medium', 
     icon: <MapPin className="h-5 w-5" />
   },
 ]
@@ -333,6 +333,7 @@ export default function Dashboard() {
                       <div className={`p-3 rounded-xl border transition-colors ${
                         alert.severity === 'Critical' ? 'bg-destructive/10 border-destructive/20 text-destructive' :
                         alert.severity === 'High' ? 'bg-orange-500/10 border-orange-500/20 text-orange-500' :
+                        alert.severity === 'Medium' ? 'bg-orange-500/10 border-orange-500/20 text-orange-500' :
                         alert.type === 'Healthy' ? 'bg-primary/10 border-primary/20 text-primary' :
                         'bg-muted border-white/5 text-muted-foreground'
                       }`}>
@@ -344,6 +345,7 @@ export default function Dashboard() {
                           <Badge variant={
                             alert.severity === 'Critical' ? 'destructive' : 
                             alert.severity === 'High' ? 'secondary' : 
+                            alert.severity === 'Medium' ? 'secondary' :
                             'outline'
                           } className="text-[10px] py-0">
                             {alert.type}
@@ -738,13 +740,13 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
 
-        {/* Legend / Tips Section */}
+        {/* Legend Section */}
         <Card className="glass-card p-4 border-l-4 border-l-primary">
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-primary" /> Healthy / Normal</div>
             <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-destructive" /> Critical Alert</div>
+            <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-orange-400" /> Geofence / Medium Alert</div>
             <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-secondary" /> Interaction Required</div>
-            <div className="ml-auto flex items-center gap-1 font-bold"><Info className="h-3 w-3" /> Dashboard Tip: Double-tap any sensor ID to view full 3D Digital Twin.</div>
           </div>
         </Card>
       </main>
@@ -861,8 +863,11 @@ function AlertItem({ type, cow, time, severity }: any) {
     Low: 'text-secondary border-secondary/20 bg-secondary/5'
   }[severity as 'High'|'Medium'|'Low']
 
+  // Ensure Geofence is always orange if explicitly requested
+  const finalSeverityColor = type.includes('Geofence') ? 'text-orange-400 border-orange-400/20 bg-orange-400/5' : severityColor;
+
   return (
-    <div className={`p-3 border rounded-lg flex items-center justify-between ${severityColor}`}>
+    <div className={`p-3 border rounded-lg flex items-center justify-between ${finalSeverityColor}`}>
       <div className="flex items-center gap-3">
         <AlertTriangle className="h-4 w-4" />
         <div>

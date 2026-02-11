@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Beef, Zap } from 'lucide-react';
+import { Beef, Zap, Info } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function LoginPage() {
@@ -63,6 +63,12 @@ export default function LoginPage() {
               <Zap className="ml-2 h-4 w-4 group-hover:animate-bounce" />
             </Button>
           </Link>
+          
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10 text-[11px] text-muted-foreground">
+            <Info className="h-4 w-4 text-primary shrink-0" />
+            <p>Demonstration mode: Click <strong>Login to Dashboard</strong> to proceed directly without credentials.</p>
+          </div>
+
           <div className="text-center text-xs text-muted-foreground mt-4">
             Authorized Personnel Only • Secure 256-bit Encryption
           </div>

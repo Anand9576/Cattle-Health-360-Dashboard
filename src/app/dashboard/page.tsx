@@ -64,7 +64,7 @@ export default function Dashboard() {
 
   const cowProfileImg = PlaceHolderImages.find(img => img.id === 'cow-profile');
 
-  // Live graph logic
+  // Live graph logic for Individual Health Tab
   useEffect(() => {
     setCurrentTimestamp(new Date().toISOString())
     
@@ -524,7 +524,17 @@ function KPICard({ title, value, subtitle, icon, chartColor }: any) {
   const [chartData, setChartData] = useState<any[]>([])
 
   useEffect(() => {
-    setChartData(Array.from({length: 10}, () => ({v: Math.random() * 10})))
+    // Initial live-simulated data
+    setChartData(Array.from({length: 12}, () => ({v: 5 + Math.random() * 5})))
+
+    const interval = setInterval(() => {
+      setChartData(prev => {
+        const newData = [...prev.slice(1), { v: 5 + Math.random() * 5 }]
+        return newData
+      })
+    }, 2000) // Update every 2 seconds for visibility
+
+    return () => clearInterval(interval)
   }, [])
 
   return (
@@ -539,7 +549,16 @@ function KPICard({ title, value, subtitle, icon, chartColor }: any) {
         <div className="h-12 w-full">
            <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData}>
-              <Area type="monotone" dataKey="v" stroke={chartColor} fill={chartColor} fillOpacity={0.1} dot={false} />
+              <Area 
+                type="monotone" 
+                dataKey="v" 
+                stroke={chartColor} 
+                fill={chartColor} 
+                fillOpacity={0.1} 
+                dot={false} 
+                isAnimationActive={true}
+                animationDuration={1500}
+              />
             </AreaChart>
            </ResponsiveContainer>
         </div>

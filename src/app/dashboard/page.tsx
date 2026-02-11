@@ -353,11 +353,11 @@ export default function Dashboard() {
                 <TabsTrigger value="snapshot">Herd Snapshot</TabsTrigger>
                 <TabsTrigger value="alerts">Health Alerts</TabsTrigger>
                 <TabsTrigger value="kpis">Vitality KPIs</TabsTrigger>
-                <TabsTrigger value="sensors">Hardware Inspector</TabsTrigger>
                 <TabsTrigger value="health-check">Health Check</TabsTrigger>
                 <TabsTrigger value="thermal">Thermal Analysis</TabsTrigger>
                 <TabsTrigger value="staff">Staff & Emergency</TabsTrigger>
                 <TabsTrigger value="individual">Individual Cow</TabsTrigger>
+                <TabsTrigger value="sensors">Hardware Inspector</TabsTrigger>
               </TabsList>
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
@@ -514,145 +514,7 @@ export default function Dashboard() {
             <HealthLegend />
           </TabsContent>
 
-          {/* Tab 4: Hardware Inspector (LIVE UPDATE) */}
-          <TabsContent value="sensors" className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 glass-card p-4 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/20 rounded-lg">
-                  <Database className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider">Device Hardware Selector</h3>
-                  <p className="text-xs text-muted-foreground">Select a specific tag to inspect module telemetry</p>
-                </div>
-              </div>
-              <Select value={selectedHardwareTagId} onValueChange={setSelectedHardwareTagId}>
-                <SelectTrigger className="w-[250px] bg-background/50 border-white/10">
-                  <SelectValue placeholder="Select device..." />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-white/10">
-                  {hardwareTags.map(tag => (
-                    <SelectItem key={tag.id} value={tag.id}>
-                      {tag.id} ({tag.cow} - {tag.scenario})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column: Device Profile */}
-              <Card className={`lg:col-span-1 border-white/10 shadow-2xl relative overflow-hidden group transition-colors duration-500 ${
-                currentHardwareTag.battery < 20 ? 'bg-destructive/10 border-destructive/20' : 'bg-slate-900/80'
-              }`}>
-                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <Cpu className="h-48 w-48 text-white rotate-12" />
-                </div>
-                <CardHeader className="relative z-10 pb-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="p-2 bg-primary/20 rounded-md">
-                      <Zap className="h-5 w-5 text-primary" />
-                    </div>
-                    <Badge variant="outline" className={`text-[10px] ${
-                      currentHardwareTag.battery < 20 ? 'border-destructive/30 text-destructive' : 'border-primary/30 text-primary'
-                    }`}>
-                      {currentHardwareTag.scenario}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-2xl font-bold tracking-tight text-white font-headline">Smart Collar Tag (Pro)</CardTitle>
-                </CardHeader>
-                <CardContent className="relative z-10 space-y-6">
-                  <div className="space-y-4 pt-4">
-                    <HardwareStat label="Model Name" value="CH-360-X1" />
-                    <HardwareStat label="Hardware Assigned" value={`${currentHardwareTag.cow} (${currentHardwareTag.type})`} valueClass="text-primary" />
-                    <HardwareStat label="Firmware Version" value="v2.4.1 (Stable)" isMono />
-                    <HardwareStat 
-                      label="Power Source" 
-                      value={`3.7V LiPo (${currentHardwareTag.battery}%)`} 
-                      icon={<Battery className={`h-3 w-3 ${currentHardwareTag.battery < 20 ? 'text-destructive animate-pulse' : 'text-primary'}`} />} 
-                    />
-                    <HardwareStat label="Last Calibration" value={currentHardwareTag.lastCalib} />
-                    <HardwareStat 
-                      label="Gateway Connection" 
-                      value={`Signal: ${currentHardwareTag.signal + (currentHardwareTag.id === 'Tag-003' ? 0 : hardwareJitter.signal)} dBm`} 
-                      valueClass={currentHardwareTag.signal < -80 ? 'text-destructive font-bold' : 'text-secondary font-bold'} 
-                    />
-                  </div>
-                  
-                  <div className="p-4 bg-background/40 rounded-lg border border-white/5 mt-6">
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase mb-3 tracking-widest">Antenna Integrity</p>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-[10px] mb-1">
-                        <span>LoRa Uplink</span>
-                        <span className={currentHardwareTag.signal < -80 ? 'text-destructive' : 'text-primary'}>
-                          {currentHardwareTag.signal < -80 ? '42%' : '98%'}
-                        </span>
-                      </div>
-                      <Progress 
-                        value={currentHardwareTag.signal < -80 ? 42 : 98} 
-                        className={`h-1 bg-white/5`} 
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Right Column: Module Grid */}
-              <div className="lg:col-span-2 space-y-4">
-                <div className="flex items-center justify-between px-2">
-                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Active Sensor Modules</h3>
-                  <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary font-mono text-[10px]">4 Modules Detected</Badge>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <SensorModuleCard 
-                    name={currentHardwareTag.modules.accel.name}
-                    status={currentHardwareTag.modules.accel.status}
-                    statusType={currentHardwareTag.modules.accel.statusType}
-                    description={currentHardwareTag.modules.accel.desc}
-                    readout={currentHardwareTag.modules.accel.statusType === 'destructive' && currentHardwareTag.modules.accel.status !== 'Low Power' ? 'AXIS_LOCKED' : (
-                      currentHardwareTag.modules.accel.isCalib ? '---' : 
-                      `X:${(currentHardwareTag.modules.accel.x + hardwareJitter.accel).toFixed(2)} Y:${(currentHardwareTag.modules.accel.y + hardwareJitter.accel).toFixed(2)} Z:${(currentHardwareTag.modules.accel.z + hardwareJitter.accel).toFixed(2)}`
-                    )}
-                    health={currentHardwareTag.modules.accel.health}
-                    icon={<Activity className="h-4 w-4" />}
-                    isBlinking={currentHardwareTag.modules.accel.isCalib}
-                  />
-                  <SensorModuleCard 
-                    name={currentHardwareTag.modules.thermal.name}
-                    status={currentHardwareTag.modules.thermal.status}
-                    statusType={currentHardwareTag.modules.thermal.statusType}
-                    description={currentHardwareTag.modules.thermal.desc}
-                    readout={currentHardwareTag.modules.thermal.isCalib ? '---' : `${(currentHardwareTag.modules.thermal.val + hardwareJitter.temp).toFixed(1)}°C`}
-                    health={currentHardwareTag.modules.thermal.health}
-                    icon={<Thermometer className="h-4 w-4" />}
-                    isBlinking={currentHardwareTag.modules.thermal.isCalib}
-                  />
-                  <SensorModuleCard 
-                    name={currentHardwareTag.modules.heart.name}
-                    status={currentHardwareTag.modules.heart.status}
-                    statusType={currentHardwareTag.modules.heart.statusType}
-                    description={currentHardwareTag.modules.heart.desc}
-                    readout={currentHardwareTag.modules.heart.status === 'Disabled' ? '-- BPM' : (currentHardwareTag.modules.heart.isCalib ? '---' : `${currentHardwareTag.modules.heart.val + hardwareJitter.heart} BPM`)}
-                    health={currentHardwareTag.modules.heart.health}
-                    isBlinking={currentHardwareTag.modules.heart.statusType === 'warning' || currentHardwareTag.modules.heart.status === 'Disabled'}
-                    icon={<Zap className="h-4 w-4" />}
-                  />
-                  <SensorModuleCard 
-                    name={currentHardwareTag.modules.lora.name}
-                    status={currentHardwareTag.modules.lora.status}
-                    statusType={currentHardwareTag.modules.lora.statusType}
-                    description={currentHardwareTag.modules.lora.desc}
-                    readout={currentHardwareTag.modules.lora.isCalib ? '---' : `${currentHardwareTag.modules.lora.sf} / ${currentHardwareTag.modules.lora.freq}`}
-                    health={currentHardwareTag.modules.lora.health}
-                    icon={<Radio className="h-4 w-4" />}
-                    isBlinking={currentHardwareTag.modules.lora.status === 'Weak Signal'}
-                  />
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* Tab 5: Health Check */}
+          {/* Tab 4: Health Check */}
           <TabsContent value="health-check" className="animate-in fade-in duration-300">
             <Card className="glass-card">
               <CardHeader>
@@ -708,7 +570,7 @@ export default function Dashboard() {
             </Card>
           </TabsContent>
 
-          {/* Tab 6: Thermal Analysis */}
+          {/* Tab 5: Thermal Analysis */}
           <TabsContent value="thermal" className="space-y-6 animate-in fade-in duration-500">
             {/* 1. Main Section: Herd Aggregate Trend */}
             <Card className="glass-card">
@@ -870,7 +732,7 @@ export default function Dashboard() {
             <HealthLegend />
           </TabsContent>
 
-          {/* Tab 7: Staff */}
+          {/* Tab 6: Staff */}
           <TabsContent value="staff" className="space-y-6">
             <div className="flex items-center justify-between glass-card p-6 rounded-lg">
               <div>
@@ -914,7 +776,7 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
-          {/* Tab 8: Individual Health */}
+          {/* Tab 7: Individual Health */}
           <TabsContent value="individual" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="glass-card lg:col-span-1">
@@ -988,6 +850,144 @@ export default function Dashboard() {
               </Card>
             </div>
             <HealthLegend />
+          </TabsContent>
+
+          {/* Tab 8: Hardware Inspector (LIVE UPDATE) */}
+          <TabsContent value="sensors" className="space-y-6 animate-in fade-in duration-500">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 glass-card p-4 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/20 rounded-lg">
+                  <Database className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold uppercase tracking-wider">Device Hardware Selector</h3>
+                  <p className="text-xs text-muted-foreground">Select a specific tag to inspect module telemetry</p>
+                </div>
+              </div>
+              <Select value={selectedHardwareTagId} onValueChange={setSelectedHardwareTagId}>
+                <SelectTrigger className="w-[250px] bg-background/50 border-white/10">
+                  <SelectValue placeholder="Select device..." />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-white/10">
+                  {hardwareTags.map(tag => (
+                    <SelectItem key={tag.id} value={tag.id}>
+                      {tag.id} ({tag.cow} - {tag.scenario})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column: Device Profile */}
+              <Card className={`lg:col-span-1 border-white/10 shadow-2xl relative overflow-hidden group transition-colors duration-500 ${
+                currentHardwareTag.battery < 20 ? 'bg-destructive/10 border-destructive/20' : 'bg-slate-900/80'
+              }`}>
+                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <Cpu className="h-48 w-48 text-white rotate-12" />
+                </div>
+                <CardHeader className="relative z-10 pb-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-2 bg-primary/20 rounded-md">
+                      <Zap className="h-5 w-5 text-primary" />
+                    </div>
+                    <Badge variant="outline" className={`text-[10px] ${
+                      currentHardwareTag.battery < 20 ? 'border-destructive/30 text-destructive' : 'border-primary/30 text-primary'
+                    }`}>
+                      {currentHardwareTag.scenario}
+                    </Badge>
+                  </div>
+                  <CardTitle className="text-2xl font-bold tracking-tight text-white font-headline">Smart Collar Tag (Pro)</CardTitle>
+                </CardHeader>
+                <CardContent className="relative z-10 space-y-6">
+                  <div className="space-y-4 pt-4">
+                    <HardwareStat label="Model Name" value="CH-360-X1" />
+                    <HardwareStat label="Hardware Assigned" value={`${currentHardwareTag.cow} (${currentHardwareTag.type})`} valueClass="text-primary" />
+                    <HardwareStat label="Firmware Version" value="v2.4.1 (Stable)" isMono />
+                    <HardwareStat 
+                      label="Power Source" 
+                      value={`3.7V LiPo (${currentHardwareTag.battery}%)`} 
+                      icon={<Battery className={`h-3 w-3 ${currentHardwareTag.battery < 20 ? 'text-destructive animate-pulse' : 'text-primary'}`} />} 
+                    />
+                    <HardwareStat label="Last Calibration" value={currentHardwareTag.lastCalib} />
+                    <HardwareStat 
+                      label="Gateway Connection" 
+                      value={`Signal: ${currentHardwareTag.signal + (currentHardwareTag.id === 'Tag-003' ? 0 : hardwareJitter.signal)} dBm`} 
+                      valueClass={currentHardwareTag.signal < -80 ? 'text-destructive font-bold' : 'text-secondary font-bold'} 
+                    />
+                  </div>
+                  
+                  <div className="p-4 bg-background/40 rounded-lg border border-white/5 mt-6">
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase mb-3 tracking-widest">Antenna Integrity</p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-[10px] mb-1">
+                        <span>LoRa Uplink</span>
+                        <span className={currentHardwareTag.signal < -80 ? 'text-destructive' : 'text-primary'}>
+                          {currentHardwareTag.signal < -80 ? '42%' : '98%'}
+                        </span>
+                      </div>
+                      <Progress 
+                        value={currentHardwareTag.signal < -80 ? 42 : 98} 
+                        className={`h-1 bg-white/5`} 
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Right Column: Module Grid */}
+              <div className="lg:col-span-2 space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Active Sensor Modules</h3>
+                  <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary font-mono text-[10px]">4 Modules Detected</Badge>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <SensorModuleCard 
+                    name={currentHardwareTag.modules.accel.name}
+                    status={currentHardwareTag.modules.accel.status}
+                    statusType={currentHardwareTag.modules.accel.statusType}
+                    description={currentHardwareTag.modules.accel.desc}
+                    readout={currentHardwareTag.modules.accel.statusType === 'destructive' && currentHardwareTag.modules.accel.status !== 'Low Power' ? 'AXIS_LOCKED' : (
+                      currentHardwareTag.modules.accel.isCalib ? '---' : 
+                      `X:${(currentHardwareTag.modules.accel.x + hardwareJitter.accel).toFixed(2)} Y:${(currentHardwareTag.modules.accel.y + hardwareJitter.accel).toFixed(2)} Z:${(currentHardwareTag.modules.accel.z + hardwareJitter.accel).toFixed(2)}`
+                    )}
+                    health={currentHardwareTag.modules.accel.health}
+                    icon={<Activity className="h-4 w-4" />}
+                    isBlinking={currentHardwareTag.modules.accel.isCalib}
+                  />
+                  <SensorModuleCard 
+                    name={currentHardwareTag.modules.thermal.name}
+                    status={currentHardwareTag.modules.thermal.status}
+                    statusType={currentHardwareTag.modules.thermal.statusType}
+                    description={currentHardwareTag.modules.thermal.desc}
+                    readout={currentHardwareTag.modules.thermal.isCalib ? '---' : `${(currentHardwareTag.modules.thermal.val + hardwareJitter.temp).toFixed(1)}°C`}
+                    health={currentHardwareTag.modules.thermal.health}
+                    icon={<Thermometer className="h-4 w-4" />}
+                    isBlinking={currentHardwareTag.modules.thermal.isCalib}
+                  />
+                  <SensorModuleCard 
+                    name={currentHardwareTag.modules.heart.name}
+                    status={currentHardwareTag.modules.heart.status}
+                    statusType={currentHardwareTag.modules.heart.statusType}
+                    description={currentHardwareTag.modules.heart.desc}
+                    readout={currentHardwareTag.modules.heart.status === 'Disabled' ? '-- BPM' : (currentHardwareTag.modules.heart.isCalib ? '---' : `${currentHardwareTag.modules.heart.val + hardwareJitter.heart} BPM`)}
+                    health={currentHardwareTag.modules.heart.health}
+                    isBlinking={currentHardwareTag.modules.heart.statusType === 'warning' || currentHardwareTag.modules.heart.status === 'Disabled'}
+                    icon={<Zap className="h-4 w-4" />}
+                  />
+                  <SensorModuleCard 
+                    name={currentHardwareTag.modules.lora.name}
+                    status={currentHardwareTag.modules.lora.status}
+                    statusType={currentHardwareTag.modules.lora.statusType}
+                    description={currentHardwareTag.modules.lora.desc}
+                    readout={currentHardwareTag.modules.lora.isCalib ? '---' : `${currentHardwareTag.modules.lora.sf} / ${currentHardwareTag.modules.lora.freq}`}
+                    health={currentHardwareTag.modules.lora.health}
+                    icon={<Radio className="h-4 w-4" />}
+                    isBlinking={currentHardwareTag.modules.lora.status === 'Weak Signal'}
+                  />
+                </div>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </main>

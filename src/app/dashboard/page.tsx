@@ -119,6 +119,7 @@ const detailedAlerts = [
 
 export default function Dashboard() {
   const [emergencyMode, setEmergencyMode] = useState(false)
+  const [monitorType, setMonitorType] = useState('Heifers')
   const [liveActivity, setLiveActivity] = useState<any[]>([])
   const [staffList, setStaffList] = useState(staffListInitial)
   const [selectedCowId, setSelectedCowId] = useState('BW-452')
@@ -252,71 +253,99 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="flex-1 p-6 space-y-6">
         <Tabs defaultValue="snapshot" className="space-y-6">
-          <ScrollArea className="w-full whitespace-nowrap">
-            <TabsList className="bg-muted/50 p-1 mb-2 inline-flex">
-              <TabsTrigger value="snapshot">Herd Snapshot</TabsTrigger>
-              <TabsTrigger value="alerts">Health Alerts</TabsTrigger>
-              <TabsTrigger value="kpis">Vitality KPIs</TabsTrigger>
-              <TabsTrigger value="sensors">Sensor Status</TabsTrigger>
-              <TabsTrigger value="health-check">Health Check</TabsTrigger>
-              <TabsTrigger value="thermal">Thermal Analysis</TabsTrigger>
-              <TabsTrigger value="staff">Staff & Emergency</TabsTrigger>
-              <TabsTrigger value="individual">Individual Cow</TabsTrigger>
-            </TabsList>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <ScrollArea className="w-full sm:w-auto whitespace-nowrap">
+              <TabsList className="bg-muted/50 p-1 inline-flex">
+                <TabsTrigger value="snapshot">Herd Snapshot</TabsTrigger>
+                <TabsTrigger value="alerts">Health Alerts</TabsTrigger>
+                <TabsTrigger value="kpis">Vitality KPIs</TabsTrigger>
+                <TabsTrigger value="sensors">Sensor Status</TabsTrigger>
+                <TabsTrigger value="health-check">Health Check</TabsTrigger>
+                <TabsTrigger value="thermal">Thermal Analysis</TabsTrigger>
+                <TabsTrigger value="staff">Staff & Emergency</TabsTrigger>
+                <TabsTrigger value="individual">Individual Cow</TabsTrigger>
+              </TabsList>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Monitor:</span>
+              <Select value={monitorType} onValueChange={setMonitorType}>
+                <SelectTrigger className="w-[180px] bg-muted/50 border-white/10 h-9">
+                  <SelectValue placeholder="Select type..." />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-white/10">
+                  <SelectItem value="Dairy Cows">Dairy Cows</SelectItem>
+                  <SelectItem value="Bulls">Bulls</SelectItem>
+                  <SelectItem value="Heifers">Heifers (Active)</SelectItem>
+                  <SelectItem value="Calves">Calves</SelectItem>
+                  <SelectItem value="Beef Cattle">Beef Cattle</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           {/* Tab 1: Snapshot */}
-          <TabsContent value="snapshot" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in zoom-in-95 duration-300">
-            <SnapshotCard title="Total Head" value="1,248" icon={<Users className="text-primary" />} trend="+2% from last month" />
-            <SnapshotCard title="Critical Alerts" value="03" icon={<AlertTriangle className="text-destructive" />} trend="Requires attention" color="text-destructive" />
-            <SnapshotCard title="In Heat" value="12" icon={<Activity className="text-secondary" />} trend="Sync tracking active" />
-            <SnapshotCard title="Health Score" value="94%" icon={<ShieldAlert className="text-primary" />} trend="Above industry avg" />
-            
-            <Card className="lg:col-span-3 glass-card flex flex-col">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-primary" />
-                  Recent Alerts & System Health
-                </CardTitle>
-                <CardDescription>Live health feed merged with active sensor network status</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6 flex-1">
-                <div className="space-y-3">
-                  <AlertItem type="Fever" cow="BW-452" time="2 mins ago" severity="High" />
-                  <AlertItem type="Geofence Exit" cow="BW-110" time="15 mins ago" severity="Medium" />
-                  <AlertItem type="Low Rumination" cow="BW-098" time="1 hour ago" severity="Low" />
-                </div>
+          <TabsContent value="snapshot" className="animate-in fade-in zoom-in-95 duration-300">
+            {monitorType === 'Heifers' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <SnapshotCard title="Total Head" value="250" icon={<Users className="text-primary" />} trend="+2% from last month" />
+                <SnapshotCard title="Critical Alerts" value="05" icon={<AlertTriangle className="text-destructive" />} trend="Requires attention" color="text-destructive" />
+                <SnapshotCard title="In Heat" value="12" icon={<Activity className="text-secondary" />} trend="Sync tracking active" />
+                <SnapshotCard title="Health Score" value="94%" icon={<ShieldAlert className="text-primary" />} trend="Above industry avg" />
+                
+                <Card className="lg:col-span-3 glass-card flex flex-col">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-primary" />
+                      Recent Alerts & System Health
+                    </CardTitle>
+                    <CardDescription>Live health feed merged with active sensor network status</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6 flex-1">
+                    <div className="space-y-3">
+                      <AlertItem type="Fever" cow="BW-452" time="2 mins ago" severity="High" />
+                      <AlertItem type="Geofence Exit" cow="BW-110" time="15 mins ago" severity="Medium" />
+                      <AlertItem type="Low Rumination" cow="BW-098" time="1 hour ago" severity="Low" />
+                    </div>
 
-                <div className="pt-4 border-t border-white/5 space-y-3">
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                    <Cpu className="h-3 w-3" />
-                    Deployed Sensor Tech Stack
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <TechBadge icon={<Thermometer />} label="DS18B20 (Thermal)" />
-                    <TechBadge icon={<Activity />} label="MPU6050 (Motion)" />
-                    <TechBadge icon={<MapPin />} label="Neo-6M (GPS)" />
-                    <TechBadge icon={<Zap />} label="PulseOx (SpO2)" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                    <div className="pt-4 border-t border-white/5 space-y-3">
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                        <Cpu className="h-3 w-3" />
+                        Deployed Sensor Tech Stack
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <TechBadge icon={<Thermometer />} label="DS18B20 (Thermal)" />
+                        <TechBadge icon={<Activity />} label="MPU6050 (Motion)" />
+                        <TechBadge icon={<MapPin />} label="Neo-6M (GPS)" />
+                        <TechBadge icon={<Zap />} label="PulseOx (SpO2)" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <Card className="lg:col-span-1 glass-card p-6 flex flex-col justify-center text-center border-primary/20 bg-primary/5 min-h-[300px]">
-              <div className="flex justify-center mb-4">
-                <div className="p-4 bg-primary/20 rounded-full neon-border-emerald">
-                  <ShieldCheck className="h-10 w-10 text-primary" />
-                </div>
+                <Card className="lg:col-span-1 glass-card p-6 flex flex-col justify-center text-center border-primary/20 bg-primary/5 min-h-[300px]">
+                  <div className="flex justify-center mb-4">
+                    <div className="p-4 bg-primary/20 rounded-full neon-border-emerald">
+                      <ShieldCheck className="h-10 w-10 text-primary" />
+                    </div>
+                  </div>
+                  <h3 className="text-4xl font-bold text-primary mb-1">18 Cows</h3>
+                  <p className="text-lg font-bold text-foreground mb-1 uppercase tracking-tighter">Recovered / Cured</p>
+                  <p className="text-sm text-muted-foreground leading-snug px-4">Successfully Treated after Early Detection via IoT Telemetry</p>
+                  <div className="mt-6 flex items-center justify-center gap-2">
+                    <Badge variant="outline" className="text-primary border-primary/30">Verified</Badge>
+                    <Badge variant="outline" className="text-primary border-primary/30">Healthy</Badge>
+                  </div>
+                </Card>
               </div>
-              <h3 className="text-4xl font-bold text-primary mb-1">18 Cows</h3>
-              <p className="text-lg font-bold text-foreground mb-1 uppercase tracking-tighter">Recovered / Cured</p>
-              <p className="text-sm text-muted-foreground leading-snug px-4">Successfully Treated after Early Detection via IoT Telemetry</p>
-              <div className="mt-6 flex items-center justify-center gap-2">
-                <Badge variant="outline" className="text-primary border-primary/30">Verified</Badge>
-                <Badge variant="outline" className="text-primary border-primary/30">Healthy</Badge>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[400px] border-2 border-dashed border-white/10 rounded-xl bg-card/20 animate-in fade-in duration-500">
+                <Search className="h-16 w-16 text-muted-foreground/30 mb-4" />
+                <h3 className="text-xl font-bold text-muted-foreground">No Herd Detected</h3>
+                <p className="text-sm text-muted-foreground/60">No active tags found for <span className="text-primary font-bold">{monitorType}</span>.</p>
               </div>
-            </Card>
+            )}
           </TabsContent>
 
           {/* Tab 2: Health Alerts */}
@@ -332,8 +361,8 @@ export default function Dashboard() {
                     <div className="flex items-center gap-4">
                       <div className={`p-3 rounded-xl border transition-colors ${
                         alert.severity === 'Critical' ? 'bg-destructive/10 border-destructive/20 text-destructive' :
-                        alert.severity === 'High' ? 'bg-orange-500/10 border-orange-500/20 text-orange-500' :
-                        alert.severity === 'Medium' ? 'bg-orange-500/10 border-orange-500/20 text-orange-500' :
+                        alert.type === 'Geofence' ? 'bg-orange-500/10 border-orange-500/20 text-orange-500' :
+                        alert.severity === 'Medium' || alert.needsAttention ? 'bg-secondary/10 border-secondary/20 text-secondary' :
                         alert.type === 'Healthy' ? 'bg-primary/10 border-primary/20 text-primary' :
                         'bg-muted border-white/5 text-muted-foreground'
                       }`}>
@@ -344,10 +373,10 @@ export default function Dashboard() {
                           <p className="font-bold tracking-tight">Cow #{alert.id}</p>
                           <Badge variant={
                             alert.severity === 'Critical' ? 'destructive' : 
-                            alert.severity === 'High' ? 'secondary' : 
-                            alert.severity === 'Medium' ? 'secondary' :
+                            alert.type === 'Geofence' ? 'secondary' : // Will look orange with custom class if needed
+                            alert.severity === 'Medium' || alert.needsAttention ? 'secondary' :
                             'outline'
-                          } className="text-[10px] py-0">
+                          } className={`text-[10px] py-0 ${alert.type === 'Geofence' ? 'bg-orange-500/20 text-orange-500 border-orange-500/30' : ''}`}>
                             {alert.type}
                           </Badge>
                         </div>
@@ -357,7 +386,7 @@ export default function Dashboard() {
                     <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2">
                       <div className="flex items-center gap-3">
                         {alert.needsAttention && (
-                          <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider animate-pulse">Needs Attention</span>
+                          <span className="text-[10px] font-bold text-secondary uppercase tracking-wider animate-pulse">Attention Required</span>
                         )}
                         <p className="text-[10px] text-muted-foreground whitespace-nowrap">{alert.time}</p>
                       </div>
@@ -742,11 +771,11 @@ export default function Dashboard() {
 
         {/* Legend Section */}
         <Card className="glass-card p-4 border-l-4 border-l-primary">
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-primary" /> Healthy / Normal</div>
-            <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-destructive" /> Critical Alert</div>
-            <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-orange-400" /> Geofence / Medium Alert</div>
-            <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-secondary" /> Interaction Required</div>
+          <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full bg-primary" /> Healthy / Normal</div>
+            <div className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full bg-destructive" /> Critical Alert</div>
+            <div className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full bg-orange-400" /> Geofence Alert</div>
+            <div className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full bg-secondary" /> Attention Required</div>
           </div>
         </Card>
       </main>
@@ -762,6 +791,10 @@ export default function Dashboard() {
 
 // Subcomponents
 function SnapshotCard({ title, value, icon, trend, color = "text-primary" }: any) {
+  // User requested "In Heat" to be blue
+  const finalColor = title === 'In Heat' ? 'text-secondary' : color;
+  const iconColorClass = title === 'In Heat' ? 'text-secondary' : '';
+
   return (
     <Card className="glass-card">
       <CardContent className="p-6">
@@ -769,7 +802,7 @@ function SnapshotCard({ title, value, icon, trend, color = "text-primary" }: any
           <p className="text-sm text-muted-foreground font-medium">{title}</p>
           <div className="p-2 bg-muted/50 rounded-lg">{icon}</div>
         </div>
-        <h3 className={`text-3xl font-bold font-headline mb-1 ${color}`}>{value}</h3>
+        <h3 className={`text-3xl font-bold font-headline mb-1 ${finalColor}`}>{value}</h3>
         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
           {trend}
         </p>
@@ -857,19 +890,21 @@ function GatewayStatus({ name, status, signal }: any) {
 }
 
 function AlertItem({ type, cow, time, severity }: any) {
+  const isGeofence = type.includes('Geofence') || type === 'Geofence Exit';
+  
   const severityColor = {
     High: 'text-destructive border-destructive/20 bg-destructive/5',
-    Medium: 'text-orange-400 border-orange-400/20 bg-orange-400/5',
-    Low: 'text-secondary border-secondary/20 bg-secondary/5'
+    Medium: 'text-secondary border-secondary/20 bg-secondary/5',
+    Low: 'text-primary border-primary/20 bg-primary/5'
   }[severity as 'High'|'Medium'|'Low']
 
-  // Ensure Geofence is always orange if explicitly requested
-  const finalSeverityColor = type.includes('Geofence') ? 'text-orange-400 border-orange-400/20 bg-orange-400/5' : severityColor;
+  // Geofence must be orange
+  const finalSeverityColor = isGeofence ? 'text-orange-400 border-orange-400/20 bg-orange-400/5' : severityColor;
 
   return (
     <div className={`p-3 border rounded-lg flex items-center justify-between ${finalSeverityColor}`}>
       <div className="flex items-center gap-3">
-        <AlertTriangle className="h-4 w-4" />
+        {isGeofence ? <MapPin className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
         <div>
           <p className="text-sm font-bold">{type}</p>
           <p className="text-[10px] opacity-80">Cow assigned: {cow}</p>

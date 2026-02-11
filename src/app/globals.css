@@ -53,6 +53,10 @@
   transform: perspective(1000px) rotateX(2deg) rotateY(2deg);
 }
 
+.glass-modal {
+  @apply bg-card/90 backdrop-blur-lg border border-white/10 shadow-2xl;
+}
+
 .neon-text-emerald {
   text-shadow: 0 0 10px hsla(111, 100%, 54%, 0.5);
 }

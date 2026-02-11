@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useMemo } from 'react'
@@ -385,7 +384,7 @@ export default function Dashboard() {
   const handleCallVetFromModal = () => {
     setIsAlertModalOpen(false)
     toast({
-      title: "Navigation Request",
+      title: "Emergency Redirect",
       description: "🔄 Switching to Staff & Emergency to initiate call...",
     })
     setActiveTab('staff')
@@ -535,7 +534,7 @@ export default function Dashboard() {
           </TabsContent>
 
           {/* Tab 2: Health Alerts */}
-          <TabsContent value="alerts" className="space-y-6 animate-in slide-in-from-left-5 duration-300">
+          <TabsContent value="alerts" className="space-y-4 animate-in slide-in-from-left-5 duration-300">
             {monitorType === 'Cows' ? (
               <>
                 <Card className="glass-card">
@@ -1200,7 +1199,7 @@ export default function Dashboard() {
       </main>
 
       <Dialog open={isAlertModalOpen} onOpenChange={setIsAlertModalOpen}>
-        <DialogContent className="glass-card border-white/10 sm:max-w-[500px]">
+        <DialogContent className="glass-modal border-white/10 sm:max-w-[500px]">
           {selectedAlertForModal && (
             <>
               <DialogHeader>
@@ -1305,7 +1304,7 @@ function NoDataState({ type, message }: { type: string, message: string }) {
 function HealthLegend() {
   return (
     <div className="flex justify-center w-full">
-      <Card className="glass-card p-4 border-l-4 border-l-primary inline-block">
+      <Card className="glass-modal p-4 border-l-4 border-l-primary inline-block">
         <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground">
           <div className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full bg-primary" /> Healthy / Normal</div>
           <div className="flex items-center gap-2"><div className="h-2.5 w-2.5 rounded-full bg-destructive" /> Critical Alert</div>

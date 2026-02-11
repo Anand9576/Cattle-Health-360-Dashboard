@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useMemo } from 'react'
@@ -743,18 +742,18 @@ export default function Dashboard() {
                     <CardTitle>Live Motion Feed</CardTitle>
                     <CardDescription>Accelerated activity profiling (Walking/Eating/Sleeping)</CardDescription>
                   </div>
-                  <div className="flex gap-2">
-                    <div className="flex items-center gap-1">
-                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-3))' }} /> 
-                      <span className="text-[10px]">Walking</span>
+                  <div className="flex gap-4">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-3))' }} /> 
+                      <span className="text-xs font-medium">Walking</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-4))' }} /> 
-                      <span className="text-[10px]">Eating</span>
+                    <div className="flex items-center gap-2">
+                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-4))' }} /> 
+                      <span className="text-xs font-medium">Eating</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <div className="h-2 w-2 rounded-full bg-white" /> 
-                      <span className="text-[10px]">Sleeping</span>
+                    <div className="flex items-center gap-2">
+                      <div className="h-2.5 w-2.5 rounded-full bg-white" /> 
+                      <span className="text-xs font-medium">Sleeping</span>
                     </div>
                   </div>
                 </CardHeader>
@@ -768,8 +767,8 @@ export default function Dashboard() {
                         contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
                         itemStyle={{ fontSize: '10px' }}
                       />
-                      <Line type="monotone" dataKey="walking" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} isAnimationActive={false} />
-                      <Line type="monotone" dataKey="eating" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={false} isAnimationActive={false} />
+                      <Line type="monotone" dataKey="walking" stroke="hsl(var(--chart-3))" strokeWidth={2.5} dot={false} isAnimationActive={false} />
+                      <Line type="monotone" dataKey="eating" stroke="hsl(var(--chart-4))" strokeWidth={2.5} dot={false} isAnimationActive={false} />
                       <Line type="monotone" dataKey="sleeping" stroke="#ffffff" strokeWidth={1.5} dot={false} isAnimationActive={false} />
                     </LineChart>
                   </ResponsiveContainer>
@@ -803,7 +802,6 @@ export default function Dashboard() {
 function SnapshotCard({ title, value, icon, trend, color = "text-primary" }: any) {
   // User requested "In Heat" to be blue
   const finalColor = title === 'In Heat' ? 'text-secondary' : color;
-  const iconColorClass = title === 'In Heat' ? 'text-secondary' : '';
 
   return (
     <Card className="glass-card">

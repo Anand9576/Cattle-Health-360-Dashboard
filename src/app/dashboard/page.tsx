@@ -67,6 +67,8 @@ const cowPerformanceData: Record<string, any> = {
   'BW-452': {
     name: 'Sickly Heifer',
     trend: 'Declining',
+    healthStatus: 'Critical',
+    healthColor: '#ef4444',
     tempData: herdThermalData.map(d => ({ ...d, cowTemp: d.avgTemp + 1.2 + Math.random() * 0.4 })),
     ruminationData: [
       { day: 'Mon', mins: 460 }, { day: 'Tue', mins: 420 }, { day: 'Wed', mins: 350 }, { day: 'Thu', mins: 280 }, { day: 'Fri', mins: 210 }
@@ -78,6 +80,8 @@ const cowPerformanceData: Record<string, any> = {
   'BW-103': {
     name: 'Slow Mover',
     trend: 'Stable',
+    healthStatus: 'Attention Required',
+    healthColor: '#f59e0b',
     tempData: herdThermalData.map(d => ({ ...d, cowTemp: d.avgTemp + 0.2 + Math.random() * 0.2 })),
     ruminationData: [
       { day: 'Mon', mins: 410 }, { day: 'Tue', mins: 405 }, { day: 'Wed', mins: 415 }, { day: 'Thu', mins: 400 }, { day: 'Fri', mins: 390 }
@@ -89,6 +93,8 @@ const cowPerformanceData: Record<string, any> = {
   'BW-007': {
     name: 'Star Performer',
     trend: 'Improving',
+    healthStatus: 'Healthy',
+    healthColor: '#10b981',
     tempData: herdThermalData.map(d => ({ ...d, cowTemp: d.avgTemp - 0.1 + Math.random() * 0.1 })),
     ruminationData: [
       { day: 'Mon', mins: 480 }, { day: 'Tue', mins: 490 }, { day: 'Wed', mins: 510 }, { day: 'Thu', mins: 520 }, { day: 'Fri', mins: 505 }
@@ -254,9 +260,9 @@ export default function Dashboard() {
 
   // Status and Color mapping
   const getCowHealthInfo = (id: string) => {
-    if (id === 'BW-452') return { status: 'Critical', color: 'hsl(var(--destructive))' }
-    if (id === 'BW-103') return { status: 'Attention Required', color: 'hsl(var(--secondary))' }
-    return { status: 'Stable', color: 'hsl(var(--primary))' }
+    if (id === 'BW-452') return { status: 'Critical', color: '#ef4444' }
+    if (id === 'BW-103') return { status: 'Attention Required', color: '#f59e0b' }
+    return { status: 'Stable', color: '#10b981' }
   }
 
   const selectedCowInfo = getCowHealthInfo(selectedCowId)
@@ -394,7 +400,6 @@ export default function Dashboard() {
                 <TabsTrigger value="snapshot">Herd Snapshot</TabsTrigger>
                 <TabsTrigger value="alerts">Health Alerts</TabsTrigger>
                 <TabsTrigger value="kpis">Vitality KPIs</TabsTrigger>
-                <TabsTrigger value="health-check">Health Check</TabsTrigger>
                 <TabsTrigger value="thermal">Thermal Analysis</TabsTrigger>
                 <TabsTrigger value="staff">Staff & Emergency</TabsTrigger>
                 <TabsTrigger value="individual">Individual Cow</TabsTrigger>
@@ -427,7 +432,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <SnapshotCard title="Total Head" value="250" icon={<Users className="text-primary" />} trend="+2% from last month" />
                   <SnapshotCard title="Critical Alerts" value="05" icon={<AlertTriangle className="text-destructive" />} trend="Requires attention" color="text-destructive" />
-                  <SnapshotCard title="In Heat" value="12" icon={<Activity className="text-secondary" />} trend="Sync tracking active" />
+                  <SnapshotCard title="In Heat" value="12" icon={<Activity className="text-secondary" />} trend="Sync tracking active" isHeat />
                   <SnapshotCard title="Health Score" value="94%" icon={<ShieldAlert className="text-primary" />} trend="Above industry avg" />
                   
                   <Card className="lg:col-span-3 glass-card flex flex-col">
@@ -568,9 +573,9 @@ export default function Dashboard() {
                       <SelectValue placeholder="Select Cow ID..." />
                     </SelectTrigger>
                     <SelectContent className="bg-card border-white/10">
-                      <SelectItem value="BW-452">BW-452 (Sick)</SelectItem>
-                      <SelectItem value="BW-103">BW-103 (Lame)</SelectItem>
-                      <SelectItem value="BW-007">BW-007 (Star)</SelectItem>
+                      <SelectItem value="BW-452">BW-452 (Critical)</SelectItem>
+                      <SelectItem value="BW-103">BW-103 (Attention Req.)</SelectItem>
+                      <SelectItem value="BW-007">BW-007 (Healthy)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -581,7 +586,7 @@ export default function Dashboard() {
                   <Card className="bg-muted/20 border-white/5">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-bold flex items-center gap-2">
-                        <Thermometer className="h-4 w-4 text-primary" />
+                        <Thermometer className="h-4 w-4" style={{ color: currentKpiCow.healthColor }} />
                         Temperature Deviation
                       </CardTitle>
                     </CardHeader>
@@ -594,7 +599,7 @@ export default function Dashboard() {
                           <Tooltip 
                             contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
                           />
-                          <Line type="monotone" name="Cow Temp" dataKey="cowTemp" stroke="hsl(var(--destructive))" strokeWidth={2.5} dot={false} />
+                          <Line type="monotone" name="Cow Temp" dataKey="cowTemp" stroke={currentKpiCow.healthColor} strokeWidth={2.5} dot={false} isAnimationActive={true} />
                           <Line type="monotone" name="Herd Avg" dataKey="avgTemp" stroke="#ffffff30" strokeDasharray="5 5" strokeWidth={1.5} dot={false} />
                         </LineChart>
                       </ResponsiveContainer>
@@ -605,7 +610,7 @@ export default function Dashboard() {
                   <Card className="bg-muted/20 border-white/5">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-bold flex items-center gap-2">
-                        <Activity className="h-4 w-4 text-secondary" />
+                        <Activity className="h-4 w-4" style={{ color: currentKpiCow.healthColor }} />
                         Rumination (5 Days)
                       </CardTitle>
                     </CardHeader>
@@ -618,15 +623,13 @@ export default function Dashboard() {
                           <Tooltip 
                             contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
                           />
-                          <ReferenceLine y={450} stroke="#10b981" strokeDasharray="3 3" label={{ position: 'top', value: '450m', fill: '#10b981', fontSize: 10 }} />
+                          <ReferenceLine y={450} stroke="#10b981" strokeDasharray="3 3" label={{ position: 'top', value: 'Target', fill: '#10b981', fontSize: 10 }} />
                           <Bar 
                             dataKey="mins" 
                             radius={[4, 4, 0, 0]}
-                          >
-                            {currentKpiCow.ruminationData.map((entry: any, index: number) => (
-                              <cell key={`cell-${index}`} fill={entry.mins < 300 ? '#f59e0b' : 'hsl(var(--secondary))'} />
-                            ))}
-                          </Bar>
+                            fill={currentKpiCow.healthColor}
+                            isAnimationActive={true}
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     </CardContent>
@@ -637,7 +640,7 @@ export default function Dashboard() {
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-sm font-bold flex items-center gap-2">
-                          <Milk className="h-4 w-4 text-primary" />
+                          <Milk className="h-4 w-4" style={{ color: currentKpiCow.healthColor }} />
                           Milk Yield (7 Days)
                         </CardTitle>
                         <div className="flex items-center gap-1 text-[10px] font-bold uppercase">
@@ -655,9 +658,9 @@ export default function Dashboard() {
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={currentKpiCow.milkData}>
                           <defs>
-                            <linearGradient id="milkGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4}/>
-                              <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                            <linearGradient id={`milkGradient-${kpiSelectedCowId}`} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={currentKpiCow.healthColor} stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor={currentKpiCow.healthColor} stopOpacity={0}/>
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
@@ -666,7 +669,7 @@ export default function Dashboard() {
                           <Tooltip 
                             contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
                           />
-                          <Area type="monotone" dataKey="yield" stroke="#8b5cf6" strokeWidth={2.5} fillOpacity={1} fill="url(#milkGradient)" />
+                          <Area type="monotone" dataKey="yield" stroke={currentKpiCow.healthColor} strokeWidth={2.5} fillOpacity={1} fill={`url(#milkGradient-${kpiSelectedCowId})`} isAnimationActive={true} />
                         </AreaChart>
                       </ResponsiveContainer>
                     </CardContent>
@@ -676,63 +679,7 @@ export default function Dashboard() {
             </Card>
           </TabsContent>
 
-          {/* Tab 4: Health Check */}
-          <TabsContent value="health-check" className="animate-in fade-in duration-300">
-            <Card className="glass-card">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Sensor Inventory & Calibration</CardTitle>
-                  <div className="relative w-64">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search tag ID..." className="pl-8 h-9" />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="text-xs uppercase bg-muted/30">
-                      <tr>
-                        <th className="px-4 py-3">Tag ID</th>
-                        <th className="px-4 py-3">Cow Assigned</th>
-                        <th className="px-4 py-3">Status</th>
-                        <th className="px-4 py-3">Battery</th>
-                        <th className="px-4 py-3">Signal</th>
-                        <th className="px-4 py-3">Calibration</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {sensors.map(s => (
-                        <tr key={s.id} className="hover:bg-white/5 transition-colors">
-                          <td className="px-4 py-3 font-mono text-xs">{s.id}</td>
-                          <td className="px-4 py-3">{s.cow}</td>
-                          <td className="px-4 py-3">
-                            <Badge variant={s.status === 'Online' ? 'default' : 'destructive'} className="text-[10px]">
-                              {s.status}
-                            </Badge>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <Battery className={`h-3 w-3 ${s.battery < 20 ? 'text-destructive' : 'text-primary'}`} />
-                              {s.battery}%
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">{s.signal}</td>
-                          <td className="px-4 py-3">
-                            <Badge variant="outline" className={`text-[10px] ${s.calib === 'Valid' ? 'text-primary border-primary/20' : 'text-muted-foreground'}`}>
-                              {s.calib}
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab 5: Thermal Analysis */}
+          {/* Tab 4: Thermal Analysis */}
           <TabsContent value="thermal" className="space-y-6 animate-in fade-in duration-500">
             {/* 1. Main Section: Herd Aggregate Trend */}
             <Card className="glass-card">
@@ -894,7 +841,7 @@ export default function Dashboard() {
             <HealthLegend />
           </TabsContent>
 
-          {/* Tab 6: Staff */}
+          {/* Tab 5: Staff */}
           <TabsContent value="staff" className="space-y-6">
             <div className="flex items-center justify-between glass-card p-6 rounded-lg">
               <div>
@@ -938,7 +885,7 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
-          {/* Tab 7: Individual Health */}
+          {/* Tab 6: Individual Health */}
           <TabsContent value="individual" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="glass-card lg:col-span-1">
@@ -1014,7 +961,7 @@ export default function Dashboard() {
             <HealthLegend />
           </TabsContent>
 
-          {/* Tab 8: Hardware Inspector (LIVE UPDATE) */}
+          {/* Tab 7: Hardware Inspector (LIVE UPDATE) */}
           <TabsContent value="sensors" className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 glass-card p-4 rounded-lg">
               <div className="flex items-center gap-3">
@@ -1179,15 +1126,15 @@ function HealthLegend() {
   )
 }
 
-function SnapshotCard({ title, value, icon, trend, color = "text-primary" }: any) {
-  const finalColor = title === 'In Heat' ? 'text-secondary' : color;
+function SnapshotCard({ title, value, icon, trend, color = "text-primary", isHeat = false }: any) {
+  const finalColor = isHeat ? 'text-secondary' : color;
 
   return (
     <Card className="glass-card">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm text-muted-foreground font-medium">{title}</p>
-          <div className="p-2 bg-muted/50 rounded-lg">{icon}</div>
+          <div className={`p-2 rounded-lg ${isHeat ? 'bg-secondary/20' : 'bg-muted/50'}`}>{icon}</div>
         </div>
         <h3 className={`text-3xl font-bold font-headline mb-1 ${finalColor}`}>{value}</h3>
         <p className="text-[10px] text-muted-foreground flex items-center gap-1">

@@ -61,7 +61,7 @@ export function AIChat() {
               <div className="space-y-4">
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] p-3 rounded-lg text-sm ${
+                    <div className={`max-w-[80%] p-3 rounded-lg text-sm whitespace-pre-wrap ${
                       msg.role === 'user' 
                         ? 'bg-secondary text-secondary-foreground' 
                         : 'bg-muted text-foreground border border-white/5'

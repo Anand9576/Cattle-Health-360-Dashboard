@@ -25,25 +25,16 @@ export async function aiHelpForAlerts(input: AIHelpForAlertsInput): Promise<AIHe
   return aiHelpForAlertsFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'aiHelpForAlertsPrompt',
-  input: {schema: AIHelpForAlertsInputSchema},
-  output: {schema: AIHelpForAlertsOutputSchema},
-  prompt: `You are an AI assistant for a cattle farm manager. When an alert event occurs, you provide static advice on how to respond to the alert.
-
-Alert Event: {{{alertEvent}}}
-
-Advice: `,
-});
-
 const aiHelpForAlertsFlow = ai.defineFlow(
   {
     name: 'aiHelpForAlertsFlow',
     inputSchema: AIHelpForAlertsInputSchema,
     outputSchema: AIHelpForAlertsOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  async () => {
+    // In Limited Mode, we bypass the LLM and return a standard menu response as requested.
+    return {
+      advice: "I am currently operating in Limited Mode. I cannot process specific queries yet.\n\nQuick Actions:\n1. Call Vet (Ext 911)\n2. View Critical Alerts\n3. Download Logs"
+    };
   }
 );

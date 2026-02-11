@@ -65,7 +65,7 @@ const herdThermalData = [
 
 const cowPerformanceData: Record<string, any> = {
   'BW-452': {
-    name: 'Sickly Heifer',
+    name: 'Sickly Cow',
     trend: 'Declining',
     healthStatus: 'Critical',
     healthColor: '#ef4444',
@@ -113,19 +113,11 @@ const staffListInitial = [
   { id: 5, name: 'David Lee', role: 'Emergency Lead', status: 'Active' },
 ]
 
-const sensors = [
-  { id: 'Tag-001', cow: 'BW-452', status: 'Online', battery: 85, signal: 'Strong', calib: 'Valid' },
-  { id: 'Tag-002', cow: 'BW-110', status: 'Online', battery: 12, signal: 'Weak', calib: 'Pending' },
-  { id: 'Tag-003', cow: 'BW-098', status: 'Offline', battery: 0, signal: 'N/A', calib: 'Invalid' },
-  { id: 'Tag-004', cow: 'BW-221', status: 'Online', battery: 92, signal: 'Strong', calib: 'Valid' },
-  { id: 'Tag-005', cow: 'BW-333', status: 'Online', battery: 45, signal: 'Moderate', calib: 'Valid' },
-]
-
 const hardwareTags = [
   {
     id: 'Tag-001',
     cow: 'Bella',
-    type: 'Heifer',
+    type: 'Cow',
     scenario: 'Stable',
     battery: 98,
     signal: -42,
@@ -246,7 +238,7 @@ const detailedAlerts = [
 
 export default function Dashboard() {
   const [emergencyMode, setEmergencyMode] = useState(false)
-  const [monitorType, setMonitorType] = useState('Heifers')
+  const [monitorType, setMonitorType] = useState('Cows')
   const [liveActivity, setLiveActivity] = useState<any[]>([])
   const [staffList, setStaffList] = useState(staffListInitial)
   const [selectedCowId, setSelectedCowId] = useState('BW-452')
@@ -415,9 +407,8 @@ export default function Dashboard() {
                   <SelectValue placeholder="Select type..." />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-white/10">
-                  <SelectItem value="Dairy Cows">Dairy Cows</SelectItem>
+                  <SelectItem value="Cows">Cows (Active)</SelectItem>
                   <SelectItem value="Bulls">Bulls</SelectItem>
-                  <SelectItem value="Heifers">Heifers (Active)</SelectItem>
                   <SelectItem value="Calves">Calves</SelectItem>
                   <SelectItem value="Beef Cattle">Beef Cattle</SelectItem>
                 </SelectContent>
@@ -427,10 +418,10 @@ export default function Dashboard() {
 
           {/* Tab 1: Snapshot */}
           <TabsContent value="snapshot" className="animate-in fade-in zoom-in-95 duration-300 space-y-6">
-            {monitorType === 'Heifers' ? (
+            {monitorType === 'Cows' ? (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <SnapshotCard title="Total Head" value="250" icon={<Users className="text-primary" />} trend="+2% from last month" />
+                  <SnapshotCard title="Total Head" value="250" icon={<Users className="text-primary" />} trend="Registered Cows" />
                   <SnapshotCard title="Critical Alerts" value="05" icon={<AlertTriangle className="text-destructive" />} trend="Requires attention" color="text-destructive" />
                   <SnapshotCard title="In Heat" value="12" icon={<Activity className="text-secondary" />} trend="Sync tracking active" isHeat />
                   <SnapshotCard title="Health Score" value="94%" icon={<ShieldAlert className="text-primary" />} trend="Above industry avg" />

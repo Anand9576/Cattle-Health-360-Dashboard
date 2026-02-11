@@ -674,7 +674,6 @@ export default function Dashboard() {
                 </div>
               </CardContent>
             </Card>
-            <HealthLegend />
           </TabsContent>
 
           {/* Tab 4: Health Check */}

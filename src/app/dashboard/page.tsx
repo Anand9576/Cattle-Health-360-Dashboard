@@ -76,6 +76,84 @@ const sensors = [
   { id: 'Tag-005', cow: 'BW-333', status: 'Online', battery: 45, signal: 'Moderate', calib: 'Valid' },
 ]
 
+const hardwareTags = [
+  {
+    id: 'Tag-001',
+    cow: 'Bella',
+    type: 'Heifer',
+    scenario: 'Stable',
+    battery: 98,
+    signal: -42,
+    lastCalib: '2026-01-10',
+    modules: {
+      accel: { name: 'Accelerometer (MPU6050)', status: 'Operational', statusType: 'success', health: 100, x: 0.02, y: 0.98, z: 0.15, desc: '3-axis movement tracking for lameness & rumination.' },
+      thermal: { name: 'Thermal Probe (DS18B20)', status: 'Operational', statusType: 'success', health: 99, val: 38.9, desc: 'Core body temperature monitoring.' },
+      heart: { name: 'Heart Rate (Pulse/SpO2)', status: 'Operational', statusType: 'success', health: 95, val: 72, desc: 'Optical photoplethysmography sensor.' },
+      lora: { name: 'Transceiver (SX1276 LoRa)', status: 'Sending...', statusType: 'info', health: 100, freq: '868MHz', sf: 'SF7', desc: 'Long-range telemetry uplink.' }
+    }
+  },
+  {
+    id: 'Tag-002',
+    cow: 'Max',
+    type: 'Bull',
+    scenario: 'Critical Battery',
+    battery: 12,
+    signal: -45,
+    lastCalib: '2025-12-15',
+    modules: {
+      accel: { name: 'Accelerometer (MPU6050)', status: 'Low Power', statusType: 'warning', health: 85, x: 0.00, y: 0.00, z: 0.00, desc: 'Restricted sampling rate.' },
+      thermal: { name: 'Thermal Probe (DS18B20)', status: 'Operational', statusType: 'success', health: 90, val: 38.5, desc: 'Core body temperature monitoring.' },
+      heart: { name: 'Heart Rate (Pulse/SpO2)', status: 'Disabled', statusType: 'destructive', health: 0, val: 0, desc: 'Sensor disabled to conserve power.' },
+      lora: { name: 'Transceiver (SX1276 LoRa)', status: 'Low Power', statusType: 'warning', health: 70, freq: '868MHz', sf: 'SF12', desc: 'Extended range mode active.' }
+    }
+  },
+  {
+    id: 'Tag-003',
+    cow: 'Luna',
+    type: 'Calf',
+    scenario: 'Calibration Mode',
+    battery: 85,
+    signal: -50,
+    lastCalib: '2026-02-14',
+    modules: {
+      accel: { name: 'Accelerometer (MPU6050)', status: 'Calibrating', statusType: 'warning', health: 100, x: 0, y: 0, z: 0, desc: 'Zero-point alignment in progress.', isCalib: true },
+      thermal: { name: 'Thermal Probe (DS18B20)', status: 'Calibrating', statusType: 'warning', health: 100, val: 0, desc: 'Environmental offset adjustment.', isCalib: true },
+      heart: { name: 'Heart Rate (Pulse/SpO2)', status: 'Calibrating', statusType: 'warning', health: 100, val: 0, desc: 'Skin contact verification.', isCalib: true },
+      lora: { name: 'Transceiver (SX1276 LoRa)', status: 'Calibrating', statusType: 'warning', health: 100, freq: '868MHz', sf: 'SF7', desc: 'Gateway handshake.', isCalib: true }
+    }
+  },
+  {
+    id: 'Tag-004',
+    cow: 'Daisy',
+    type: 'Cow',
+    scenario: 'Sensor Failure',
+    battery: 76,
+    signal: -48,
+    lastCalib: '2025-11-20',
+    modules: {
+      accel: { name: 'Accelerometer (MPU6050)', status: 'Axis Error', statusType: 'destructive', health: 15, x: 9.99, y: 9.99, z: 9.99, desc: 'MEMS hardware failure detected.' },
+      thermal: { name: 'Thermal Probe (DS18B20)', status: 'Operational', statusType: 'success', health: 98, val: 38.7, desc: 'Core body temperature monitoring.' },
+      heart: { name: 'Heart Rate (Pulse/SpO2)', status: 'Operational', statusType: 'success', health: 92, val: 75, desc: 'Optical photoplethysmography sensor.' },
+      lora: { name: 'Transceiver (SX1276 LoRa)', status: 'Sending...', statusType: 'info', health: 95, freq: '868MHz', sf: 'SF7', desc: 'Long-range telemetry uplink.' }
+    }
+  },
+  {
+    id: 'Tag-005',
+    cow: 'Rocky',
+    type: 'Bull',
+    scenario: 'Weak Signal',
+    battery: 92,
+    signal: -95,
+    lastCalib: '2026-01-05',
+    modules: {
+      accel: { name: 'Accelerometer (MPU6050)', status: 'Operational', statusType: 'success', health: 100, x: 0.12, y: 0.85, z: 0.22, desc: '3-axis movement tracking.' },
+      thermal: { name: 'Thermal Probe (DS18B20)', status: 'Operational', statusType: 'success', health: 99, val: 39.1, desc: 'Core body temperature monitoring.' },
+      heart: { name: 'Heart Rate (Pulse/SpO2)', status: 'Operational', statusType: 'success', health: 95, val: 68, desc: 'Optical photoplethysmography sensor.' },
+      lora: { name: 'Transceiver (SX1276 LoRa)', status: 'Weak Signal', statusType: 'destructive', health: 40, freq: '868MHz', sf: 'SF12', desc: 'Extreme attenuation detected.' }
+    }
+  }
+]
+
 const detailedAlerts = [
   { 
     id: 'BW-101', 
@@ -127,8 +205,10 @@ export default function Dashboard() {
   const [liveActivity, setLiveActivity] = useState<any[]>([])
   const [staffList, setStaffList] = useState(staffListInitial)
   const [selectedCowId, setSelectedCowId] = useState('BW-452')
+  const [selectedHardwareTagId, setSelectedHardwareTagId] = useState('Tag-001')
   const [pulsingTemps, setPulsingTemps] = useState<{ [key: string]: number }>({ 'BW-452': 39.8, 'BW-103': 38.4 })
   const [liveComparisonData, setLiveComparisonData] = useState<any[]>([])
+  const [hardwareJitter, setHardwareJitter] = useState({ temp: 0, accel: 0, signal: 0, heart: 0 })
 
   const cowProfileImg = PlaceHolderImages.find(img => img.id === 'cow-profile');
 
@@ -179,7 +259,15 @@ export default function Dashboard() {
           }
         })
       })
-    }, 2000)
+
+      // 4. Hardware Jitter Update
+      setHardwareJitter({
+        temp: (Math.random() - 0.5) * 0.4,
+        accel: (Math.random() - 0.5) * 0.1,
+        signal: Math.floor((Math.random() - 0.5) * 2),
+        heart: Math.floor((Math.random() - 0.5) * 4)
+      })
+    }, 1000)
 
     return () => clearInterval(interval)
   }, [selectedCowId])
@@ -212,6 +300,8 @@ export default function Dashboard() {
     document.body.appendChild(link)
     link.click()
   }
+
+  const currentHardwareTag = hardwareTags.find(t => t.id === selectedHardwareTagId) || hardwareTags[0]
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden flex flex-col">
@@ -424,11 +514,37 @@ export default function Dashboard() {
             <HealthLegend />
           </TabsContent>
 
-          {/* Tab 4: Hardware Inspector */}
+          {/* Tab 4: Hardware Inspector (LIVE UPDATE) */}
           <TabsContent value="sensors" className="space-y-6 animate-in fade-in duration-500">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 glass-card p-4 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/20 rounded-lg">
+                  <Database className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold uppercase tracking-wider">Device Hardware Selector</h3>
+                  <p className="text-xs text-muted-foreground">Select a specific tag to inspect module telemetry</p>
+                </div>
+              </div>
+              <Select value={selectedHardwareTagId} onValueChange={setSelectedHardwareTagId}>
+                <SelectTrigger className="w-[250px] bg-background/50 border-white/10">
+                  <SelectValue placeholder="Select device..." />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-white/10">
+                  {hardwareTags.map(tag => (
+                    <SelectItem key={tag.id} value={tag.id}>
+                      {tag.id} ({tag.cow} - {tag.scenario})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column: Device Profile */}
-              <Card className="lg:col-span-1 bg-slate-900/80 border-white/10 shadow-2xl relative overflow-hidden group">
+              <Card className={`lg:col-span-1 border-white/10 shadow-2xl relative overflow-hidden group transition-colors duration-500 ${
+                currentHardwareTag.battery < 20 ? 'bg-destructive/10 border-destructive/20' : 'bg-slate-900/80'
+              }`}>
                 <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                   <Cpu className="h-48 w-48 text-white rotate-12" />
                 </div>
@@ -437,24 +553,29 @@ export default function Dashboard() {
                     <div className="p-2 bg-primary/20 rounded-md">
                       <Zap className="h-5 w-5 text-primary" />
                     </div>
-                    <Badge variant="outline" className="border-primary/30 text-primary text-[10px]">Active Node</Badge>
+                    <Badge variant="outline" className={`text-[10px] ${
+                      currentHardwareTag.battery < 20 ? 'border-destructive/30 text-destructive' : 'border-primary/30 text-primary'
+                    }`}>
+                      {currentHardwareTag.scenario}
+                    </Badge>
                   </div>
                   <CardTitle className="text-2xl font-bold tracking-tight text-white font-headline">Smart Collar Tag (Pro)</CardTitle>
                 </CardHeader>
                 <CardContent className="relative z-10 space-y-6">
                   <div className="space-y-4 pt-4">
                     <HardwareStat label="Model Name" value="CH-360-X1" />
+                    <HardwareStat label="Hardware Assigned" value={`${currentHardwareTag.cow} (${currentHardwareTag.type})`} valueClass="text-primary" />
                     <HardwareStat label="Firmware Version" value="v2.4.1 (Stable)" isMono />
                     <HardwareStat 
                       label="Power Source" 
-                      value="3.7V LiPo (3000mAh)" 
-                      icon={<Battery className="h-3 w-3 text-primary" />} 
+                      value={`3.7V LiPo (${currentHardwareTag.battery}%)`} 
+                      icon={<Battery className={`h-3 w-3 ${currentHardwareTag.battery < 20 ? 'text-destructive animate-pulse' : 'text-primary'}`} />} 
                     />
-                    <HardwareStat label="Last Calibration" value="2026-01-10" />
+                    <HardwareStat label="Last Calibration" value={currentHardwareTag.lastCalib} />
                     <HardwareStat 
                       label="Gateway Connection" 
-                      value="Signal: -42 dBm (Strong)" 
-                      valueClass="text-secondary font-bold" 
+                      value={`Signal: ${currentHardwareTag.signal + (currentHardwareTag.id === 'Tag-003' ? 0 : hardwareJitter.signal)} dBm`} 
+                      valueClass={currentHardwareTag.signal < -80 ? 'text-destructive font-bold' : 'text-secondary font-bold'} 
                     />
                   </div>
                   
@@ -463,9 +584,14 @@ export default function Dashboard() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-[10px] mb-1">
                         <span>LoRa Uplink</span>
-                        <span className="text-primary">98%</span>
+                        <span className={currentHardwareTag.signal < -80 ? 'text-destructive' : 'text-primary'}>
+                          {currentHardwareTag.signal < -80 ? '42%' : '98%'}
+                        </span>
                       </div>
-                      <Progress value={98} className="h-1 bg-white/5" />
+                      <Progress 
+                        value={currentHardwareTag.signal < -80 ? 42 : 98} 
+                        className={`h-1 bg-white/5`} 
+                      />
                     </div>
                   </div>
                 </CardContent>
@@ -479,41 +605,47 @@ export default function Dashboard() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <SensorModuleCard 
-                    name="Accelerometer (MPU6050)"
-                    status="Operational"
-                    statusType="success"
-                    description="3-axis movement tracking for lameness & rumination."
-                    readout="X:0.02 Y:0.98 Z:0.15"
-                    health={100}
+                    name={currentHardwareTag.modules.accel.name}
+                    status={currentHardwareTag.modules.accel.status}
+                    statusType={currentHardwareTag.modules.accel.statusType}
+                    description={currentHardwareTag.modules.accel.desc}
+                    readout={currentHardwareTag.modules.accel.statusType === 'destructive' && currentHardwareTag.modules.accel.status !== 'Low Power' ? 'AXIS_LOCKED' : (
+                      currentHardwareTag.modules.accel.isCalib ? '---' : 
+                      `X:${(currentHardwareTag.modules.accel.x + hardwareJitter.accel).toFixed(2)} Y:${(currentHardwareTag.modules.accel.y + hardwareJitter.accel).toFixed(2)} Z:${(currentHardwareTag.modules.accel.z + hardwareJitter.accel).toFixed(2)}`
+                    )}
+                    health={currentHardwareTag.modules.accel.health}
                     icon={<Activity className="h-4 w-4" />}
+                    isBlinking={currentHardwareTag.modules.accel.isCalib}
                   />
                   <SensorModuleCard 
-                    name="Thermal Probe (DS18B20)"
-                    status="Operational"
-                    statusType="success"
-                    description="Core body temperature monitoring."
-                    readout="38.9°C"
-                    health={99}
+                    name={currentHardwareTag.modules.thermal.name}
+                    status={currentHardwareTag.modules.thermal.status}
+                    statusType={currentHardwareTag.modules.thermal.statusType}
+                    description={currentHardwareTag.modules.thermal.desc}
+                    readout={currentHardwareTag.modules.thermal.isCalib ? '---' : `${(currentHardwareTag.modules.thermal.val + hardwareJitter.temp).toFixed(1)}°C`}
+                    health={currentHardwareTag.modules.thermal.health}
                     icon={<Thermometer className="h-4 w-4" />}
+                    isBlinking={currentHardwareTag.modules.thermal.isCalib}
                   />
                   <SensorModuleCard 
-                    name="Heart Rate (Pulse/SpO2)"
-                    status="Calibrating..."
-                    statusType="warning"
-                    description="Optical photoplethysmography sensor."
-                    readout="-- BPM"
-                    health={85}
-                    isBlinking
+                    name={currentHardwareTag.modules.heart.name}
+                    status={currentHardwareTag.modules.heart.status}
+                    statusType={currentHardwareTag.modules.heart.statusType}
+                    description={currentHardwareTag.modules.heart.desc}
+                    readout={currentHardwareTag.modules.heart.status === 'Disabled' ? '-- BPM' : (currentHardwareTag.modules.heart.isCalib ? '---' : `${currentHardwareTag.modules.heart.val + hardwareJitter.heart} BPM`)}
+                    health={currentHardwareTag.modules.heart.health}
+                    isBlinking={currentHardwareTag.modules.heart.statusType === 'warning' || currentHardwareTag.modules.heart.status === 'Disabled'}
                     icon={<Zap className="h-4 w-4" />}
                   />
                   <SensorModuleCard 
-                    name="Transceiver (SX1276 LoRa)"
-                    status="Sending..."
-                    statusType="info"
-                    description="Long-range telemetry uplink."
-                    readout="SF7 / 868MHz"
-                    health={95}
+                    name={currentHardwareTag.modules.lora.name}
+                    status={currentHardwareTag.modules.lora.status}
+                    statusType={currentHardwareTag.modules.lora.statusType}
+                    description={currentHardwareTag.modules.lora.desc}
+                    readout={currentHardwareTag.modules.lora.isCalib ? '---' : `${currentHardwareTag.modules.lora.sf} / ${currentHardwareTag.modules.lora.freq}`}
+                    health={currentHardwareTag.modules.lora.health}
                     icon={<Radio className="h-4 w-4" />}
+                    isBlinking={currentHardwareTag.modules.lora.status === 'Weak Signal'}
                   />
                 </div>
               </div>
@@ -824,11 +956,11 @@ export default function Dashboard() {
                   </div>
                   <div className="flex gap-4">
                     <div className="flex items-center gap-2">
-                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-3))' }} /> 
+                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#1e3a8a' }} /> 
                       <span className="text-xs font-medium">Walking</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-4))' }} /> 
+                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#eab308' }} /> 
                       <span className="text-xs font-medium">Eating</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -847,8 +979,8 @@ export default function Dashboard() {
                         contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
                         itemStyle={{ fontSize: '10px' }}
                       />
-                      <Line type="monotone" name="Walking" dataKey="walking" stroke="hsl(var(--chart-3))" strokeWidth={2.5} dot={false} isAnimationActive={false} />
-                      <Line type="monotone" name="Eating" dataKey="eating" stroke="hsl(var(--chart-4))" strokeWidth={2.5} dot={false} isAnimationActive={false} />
+                      <Line type="monotone" name="Walking" dataKey="walking" stroke="#1e3a8a" strokeWidth={2.5} dot={false} isAnimationActive={false} />
+                      <Line type="monotone" name="Eating" dataKey="eating" stroke="#eab308" strokeWidth={2.5} dot={false} isAnimationActive={false} />
                       <Line type="monotone" name="Sleeping" dataKey="sleeping" stroke="#ffffff" strokeWidth={1.5} dot={false} isAnimationActive={false} />
                     </LineChart>
                   </ResponsiveContainer>
@@ -1046,8 +1178,15 @@ function SensorModuleCard({ name, status, statusType, description, readout, heal
     destructive: 'bg-destructive'
   }
 
+  const bgTints = {
+    success: 'bg-emerald-500/5 border-emerald-500/20',
+    warning: 'bg-amber-500/10 border-amber-500/20',
+    info: 'bg-secondary/10 border-secondary/20',
+    destructive: 'bg-destructive/10 border-destructive/20'
+  }
+
   return (
-    <Card className="bg-[#0f172a] border-white/10 hover:border-white/20 transition-all p-4 space-y-4">
+    <Card className={`border hover:border-white/30 transition-all p-4 space-y-4 duration-500 ${bgTints[statusType as keyof typeof bgTints] || 'bg-[#0f172a] border-white/10'}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="p-2 bg-white/5 rounded-md text-white/70">
@@ -1056,8 +1195,12 @@ function SensorModuleCard({ name, status, statusType, description, readout, heal
           <span className="text-[10px] font-bold text-white uppercase tracking-tighter">{name}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`h-2 w-2 rounded-full ${pulseColors[statusType as keyof typeof pulseColors]} ${isBlinking || statusType !== 'destructive' ? 'animate-pulse' : ''}`} />
-          <span className={`text-[9px] font-bold uppercase tracking-widest ${statusType === 'warning' ? 'text-amber-500' : (statusType === 'info' ? 'text-secondary' : 'text-primary')}`}>
+          <span className={`h-2 w-2 rounded-full ${pulseColors[statusType as keyof typeof pulseColors]} ${isBlinking || statusType === 'success' ? 'animate-pulse' : ''}`} />
+          <span className={`text-[9px] font-bold uppercase tracking-widest ${
+            statusType === 'warning' ? 'text-amber-500' : 
+            (statusType === 'info' ? 'text-secondary' : 
+            (statusType === 'destructive' ? 'text-destructive' : 'text-primary'))
+          }`}>
             {status}
           </span>
         </div>
@@ -1065,8 +1208,12 @@ function SensorModuleCard({ name, status, statusType, description, readout, heal
       
       <div>
         <p className="text-[10px] text-muted-foreground leading-snug">{description}</p>
-        <div className="mt-3 py-2 px-3 bg-black/40 rounded border border-white/5 flex items-center justify-center">
-          <span className="font-mono text-xs text-primary/90 font-bold tracking-widest">{readout}</span>
+        <div className={`mt-3 py-2 px-3 rounded border border-white/5 flex items-center justify-center transition-colors ${
+          isBlinking ? 'bg-black/60 border-primary/20 animate-pulse' : 'bg-black/40'
+        }`}>
+          <span className={`font-mono text-xs font-bold tracking-widest ${
+             statusType === 'destructive' ? 'text-destructive' : 'text-primary/90'
+          }`}>{readout}</span>
         </div>
       </div>
 

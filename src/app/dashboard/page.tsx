@@ -115,7 +115,7 @@ const cowPerformanceData: Record<string, any> = {
 }
 
 const staffListInitial = [
-  { id: 1, name: 'Robert Smith', role: 'Head Herder', status: 'Active' },
+  { id: 1, name: 'Robert Smith', role: 'Farm Owner', status: 'Active' },
   { id: 2, name: 'Dr. Steve Wilson', role: 'Veterinarian', status: 'On-Call' },
   { id: 3, name: 'James Wilson', role: 'IoT Tech', status: 'Active' },
   { id: 4, name: 'Maria Garcia', role: 'Nutritionist', status: 'On-Call' },
@@ -578,7 +578,7 @@ export default function Dashboard() {
                             <p className="text-[10px] text-muted-foreground whitespace-nowrap">{alert.time}</p>
                           </div>
                           <div className="flex items-center gap-2">
-                            {alert.needsVet && (
+                            {(alert.needsVet || alert.type === 'Fever') && (
                               <Button 
                                 size="sm" 
                                 variant="default" 

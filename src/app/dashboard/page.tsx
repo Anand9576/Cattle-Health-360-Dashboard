@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useMemo } from 'react'
@@ -207,6 +206,7 @@ const detailedAlerts = [
     description: 'Fever detected (39.8C)', 
     time: '10 mins ago', 
     severity: 'High', 
+    needsVet: true,
     icon: <Thermometer className="h-5 w-5" />
   },
   { 

@@ -720,7 +720,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <CardTitle className="text-2xl">Cow #BW-452</CardTitle>
-                      <Badge className="bg-primary/20 text-primary hover:bg-primary/30">Digital Twin Active</Badge>
+                      <Badge className="bg-primary/20 text-primary hover:bg-primary/30 uppercase tracking-tight">Cattle Health 360 Tag</Badge>
                     </div>
                   </div>
                 </CardHeader>
@@ -744,8 +744,18 @@ export default function Dashboard() {
                     <CardDescription>Accelerated activity profiling (Walking/Eating/Sleeping)</CardDescription>
                   </div>
                   <div className="flex gap-2">
-                    <div className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-primary" /> <span className="text-[10px]">Walking</span></div>
-                    <div className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-secondary" /> <span className="text-[10px]">Eating</span></div>
+                    <div className="flex items-center gap-1">
+                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-3))' }} /> 
+                      <span className="text-[10px]">Walking</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-4))' }} /> 
+                      <span className="text-[10px]">Eating</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="h-2 w-2 rounded-full bg-white" /> 
+                      <span className="text-[10px]">Sleeping</span>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="h-[300px]">
@@ -758,9 +768,9 @@ export default function Dashboard() {
                         contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
                         itemStyle={{ fontSize: '10px' }}
                       />
-                      <Line type="monotone" dataKey="walking" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} isAnimationActive={false} />
-                      <Line type="monotone" dataKey="eating" stroke="hsl(var(--secondary))" strokeWidth={2} dot={false} isAnimationActive={false} />
-                      <Line type="monotone" dataKey="sleeping" stroke="#ffffff30" strokeWidth={1} dot={false} isAnimationActive={false} />
+                      <Line type="monotone" dataKey="walking" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} isAnimationActive={false} />
+                      <Line type="monotone" dataKey="eating" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={false} isAnimationActive={false} />
+                      <Line type="monotone" dataKey="sleeping" stroke="#ffffff" strokeWidth={1.5} dot={false} isAnimationActive={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -826,7 +836,7 @@ function KPICard({ title, value, subtitle, icon, chartColor }: any) {
   const [chartData, setChartData] = useState<any[]>([])
 
   useEffect(() => {
-    // Initial live-simulated data
+    // Hydration mismatch prevention
     setChartData(Array.from({length: 12}, () => ({v: 5 + Math.random() * 5})))
 
     const interval = setInterval(() => {
@@ -834,7 +844,7 @@ function KPICard({ title, value, subtitle, icon, chartColor }: any) {
         const newData = [...prev.slice(1), { v: 5 + Math.random() * 5 }]
         return newData
       })
-    }, 2000) // Update every 2 seconds for visibility
+    }, 2000)
 
     return () => clearInterval(interval)
   }, [])

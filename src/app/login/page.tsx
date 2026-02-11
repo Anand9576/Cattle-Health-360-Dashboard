@@ -1,14 +1,29 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Beef, Zap } from 'lucide-react';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function LoginPage() {
+  const loginBg = PlaceHolderImages.find(img => img.id === 'login-bg');
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[url('https://images.unsplash.com/photo-1547005327-ef75a6961556?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center">
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm"></div>
+    <div className="relative min-h-screen flex items-center justify-center p-4">
+      {/* Background with next/image for optimization */}
+      <div className="absolute inset-0 z-0">
+        <Image 
+          src={loginBg?.imageUrl || 'https://images.unsplash.com/photo-1547005327-ef75a6961556?q=80&w=2000&auto=format&fit=crop'} 
+          alt="Cattle farm background" 
+          fill 
+          className="object-cover"
+          priority
+          data-ai-hint={loginBg?.imageHint || 'cattle farm'}
+        />
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm"></div>
+      </div>
       
       <Card className="w-full max-w-md glass-card relative z-10 border-primary/20">
         <CardHeader className="text-center space-y-1">
@@ -42,7 +57,7 @@ export default function LoginPage() {
               className="bg-background/50 border-white/10 focus:border-primary/50"
             />
           </div>
-          <Link href="/dashboard" className="block w-full">
+          <Link href="/dashboard" className="block w-full" prefetch={true}>
             <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-6 group">
               Login to Dashboard
               <Zap className="ml-2 h-4 w-4 group-hover:animate-bounce" />

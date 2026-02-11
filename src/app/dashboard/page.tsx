@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { 
   Activity, 
   AlertTriangle, 
@@ -12,13 +14,11 @@ import {
   Wifi, 
   Users, 
   Info, 
-  FileJson, 
   Download,
   User,
   Clover,
   Milk,
   Battery,
-  Settings,
   ShieldAlert,
   Search
 } from 'lucide-react'
@@ -28,6 +28,7 @@ import {
 } from 'recharts'
 import { AIChat } from '@/components/dashboard/ai-chat'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
+import { PlaceHolderImages } from '@/lib/placeholder-images'
 
 // Static Data
 const thermalData = [
@@ -57,9 +58,14 @@ export default function Dashboard() {
   const [emergencyMode, setEmergencyMode] = useState(false)
   const [liveActivity, setLiveActivity] = useState<any[]>([])
   const [staffList, setStaffList] = useState(staffListInitial)
+  const [currentTimestamp, setCurrentTimestamp] = useState<string>('')
+
+  const cowProfileImg = PlaceHolderImages.find(img => img.id === 'cow-profile');
 
   // Live graph logic
   useEffect(() => {
+    setCurrentTimestamp(new Date().toISOString())
+    
     const generateInitialData = () => {
       return Array.from({ length: 20 }, (_, i) => ({
         time: i,
@@ -80,6 +86,7 @@ export default function Dashboard() {
         }]
         return newData
       })
+      setCurrentTimestamp(new Date().toISOString())
     }, 1000)
 
     return () => clearInterval(interval)
@@ -309,7 +316,7 @@ export default function Dashboard() {
               <CardContent>
                 <div className="bg-black/40 rounded-lg p-4 font-mono text-xs text-secondary overflow-x-auto">
                   <pre>{`{
-  "timestamp": "${new Date().toISOString()}",
+  "timestamp": "${currentTimestamp || 'Initializing...'}",
   "network": {
     "gateway_id": "GW-99-NORTH",
     "rssi": -74,
@@ -407,7 +414,15 @@ export default function Dashboard() {
               <Card className="glass-card lg:col-span-1">
                 <CardHeader>
                   <div className="flex items-center gap-4">
-                    <div className="h-20 w-20 rounded-xl bg-[url('https://picsum.photos/seed/cow452/200/200')] bg-cover border border-primary/20" />
+                    <div className="relative h-20 w-20 rounded-xl overflow-hidden border border-primary/20">
+                      <Image 
+                        src={cowProfileImg?.imageUrl || 'https://picsum.photos/seed/cow/200/200'} 
+                        alt="Cow profile" 
+                        fill 
+                        className="object-cover"
+                        data-ai-hint={cowProfileImg?.imageHint || 'cow profile'}
+                      />
+                    </div>
                     <div>
                       <CardTitle className="text-2xl">Cow #BW-452</CardTitle>
                       <Badge className="bg-primary/20 text-primary hover:bg-primary/30">Digital Twin Active</Badge>

@@ -59,7 +59,7 @@ import {
   LineChart, Line, BarChart, Bar, Legend, ReferenceLine
 } from 'recharts'
 import { AIChat } from '@/components/dashboard/ai-chat'
-import { NotificationStatusBar } from '@/components/dashboard/notification-status-bar'
+import { NotificationCenter } from '@/components/dashboard/notification-center'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { PlaceHolderImages } from '@/lib/placeholder-images'
 import { Progress } from '@/components/ui/progress'
@@ -295,14 +295,6 @@ export default function Dashboard() {
 
   const selectedCowInfo = getCowHealthInfo(selectedCowId)
 
-  // Critical Alert for Notification Bar
-  const activeCriticalAlert = useMemo(() => {
-    if (monitorType !== 'Cows') return null;
-    const critical = detailedAlerts.find(a => a.severity === 'Critical');
-    if (critical) return `Cow BW-${critical.id} ${critical.type} Detected - View Details`;
-    return null;
-  }, [monitorType]);
-
   // Live graph logic
   useEffect(() => {
     if (monitorType !== 'Cows') return;
@@ -449,6 +441,9 @@ export default function Dashboard() {
               <p className="text-xs font-medium">Dr. Farmly</p>
               <p className="text-[10px] text-muted-foreground">Admin Access</p>
             </div>
+            
+            <NotificationCenter onTabChange={setActiveTab} />
+
             <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center border border-white/20">
               <User className="h-5 w-5 text-secondary-foreground" />
             </div>
@@ -461,9 +456,6 @@ export default function Dashboard() {
           </div>
         </div>
       </header>
-
-      {/* Customizable Notification Bar */}
-      <NotificationStatusBar criticalAlert={activeCriticalAlert} />
 
       {/* Main Content */}
       <main className="flex-1 p-6 space-y-6">

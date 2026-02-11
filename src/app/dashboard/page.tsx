@@ -513,6 +513,12 @@ function SnapshotCard({ title, value, icon, trend, color = "text-primary" }: any
 }
 
 function KPICard({ title, value, subtitle, icon, chartColor }: any) {
+  const [chartData, setChartData] = useState<any[]>([])
+
+  useEffect(() => {
+    setChartData(Array.from({length: 10}, () => ({v: Math.random() * 10})))
+  }, [])
+
   return (
     <Card className="glass-card">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -524,7 +530,7 @@ function KPICard({ title, value, subtitle, icon, chartColor }: any) {
         <p className="text-xs text-muted-foreground mb-4">{subtitle}</p>
         <div className="h-12 w-full">
            <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={Array.from({length: 10}, () => ({v: Math.random() * 10}))}>
+            <AreaChart data={chartData}>
               <Area type="monotone" dataKey="v" stroke={chartColor} fill={chartColor} fillOpacity={0.1} dot={false} />
             </AreaChart>
            </ResponsiveContainer>

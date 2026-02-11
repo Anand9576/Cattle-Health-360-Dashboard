@@ -261,6 +261,8 @@ export default function Dashboard() {
 
   // Live graph logic
   useEffect(() => {
+    if (monitorType !== 'Cows') return;
+
     // Initial data generation
     setLiveActivity(Array.from({ length: 20 }, (_, i) => ({
       time: i,
@@ -308,7 +310,7 @@ export default function Dashboard() {
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [selectedCowId])
+  }, [selectedCowId, monitorType])
 
   // Sync initial comparison data
   useEffect(() => {
@@ -360,11 +362,28 @@ export default function Dashboard() {
           </div>
           <h1 className="text-xl font-bold tracking-tight neon-text-emerald">Cattle Health 360</h1>
         </div>
+        
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 mr-2">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:block">Monitor:</span>
+            <Select value={monitorType} onValueChange={setMonitorType}>
+              <SelectTrigger className="w-[140px] md:w-[180px] bg-muted/50 border-white/10 h-9">
+                <SelectValue placeholder="Select type..." />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-white/10">
+                <SelectItem value="Cows">Cows</SelectItem>
+                <SelectItem value="Bulls">Bulls</SelectItem>
+                <SelectItem value="Calves">Calves</SelectItem>
+                <SelectItem value="Beef Cattle">Beef Cattle</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <Button variant="outline" size="sm" onClick={exportLogs} className="hidden sm:flex gap-2">
             <Download className="h-4 w-4" />
             Export Logs
           </Button>
+          
           <div className="flex items-center gap-3 pl-4 border-l border-white/10">
             <div className="text-right hidden sm:block">
               <p className="text-xs font-medium">Dr. Farmly</p>
@@ -387,7 +406,7 @@ export default function Dashboard() {
       <main className="flex-1 p-6 space-y-6">
         <Tabs defaultValue="snapshot" className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <ScrollArea className="w-full sm:w-auto whitespace-nowrap">
+            <ScrollArea className="w-full whitespace-nowrap">
               <TabsList className="bg-muted/50 p-1 inline-flex">
                 <TabsTrigger value="snapshot">Herd Snapshot</TabsTrigger>
                 <TabsTrigger value="alerts">Health Alerts</TabsTrigger>
@@ -399,21 +418,6 @@ export default function Dashboard() {
               </TabsList>
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
-
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Monitor:</span>
-              <Select value={monitorType} onValueChange={setMonitorType}>
-                <SelectTrigger className="w-[180px] bg-muted/50 border-white/10 h-9">
-                  <SelectValue placeholder="Select type..." />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-white/10">
-                  <SelectItem value="Cows">Cows (Active)</SelectItem>
-                  <SelectItem value="Bulls">Bulls</SelectItem>
-                  <SelectItem value="Calves">Calves</SelectItem>
-                  <SelectItem value="Beef Cattle">Beef Cattle</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           {/* Tab 1: Snapshot */}
@@ -474,362 +478,370 @@ export default function Dashboard() {
                 <HealthLegend />
               </>
             ) : (
-              <div className="flex flex-col items-center justify-center h-[400px] border-2 border-dashed border-white/10 rounded-xl bg-card/20 animate-in fade-in duration-500">
-                <Search className="h-16 w-16 text-muted-foreground/30 mb-4" />
-                <h3 className="text-xl font-bold text-muted-foreground">No Herd Detected</h3>
-                <p className="text-sm text-muted-foreground/60">No active tags found for <span className="text-primary font-bold">{monitorType}</span>.</p>
-              </div>
+              <NoDataState type={monitorType} message={`No Data Available for ${monitorType}`} />
             )}
           </TabsContent>
 
           {/* Tab 2: Health Alerts */}
           <TabsContent value="alerts" className="space-y-6 animate-in slide-in-from-left-5 duration-300">
-             <Card className="glass-card">
-              <CardHeader>
-                <CardTitle>Live Health Alerts</CardTitle>
-                <CardDescription>Real-time feed from all wearable sensors with detailed diagnostic data</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {detailedAlerts.map((alert) => (
-                  <div key={alert.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-background/40 border border-white/5 rounded-lg gap-4 group">
-                    <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-xl border transition-colors ${
-                        alert.severity === 'Critical' ? 'bg-destructive/10 border-destructive/20 text-destructive' :
-                        alert.type === 'Geofence' ? 'bg-orange-500/10 border-orange-500/20 text-orange-500' :
-                        alert.severity === 'Medium' || alert.needsAttention ? 'bg-secondary/10 border-secondary/20 text-secondary' :
-                        alert.type === 'Healthy' ? 'bg-primary/10 border-primary/20 text-primary' :
-                        'bg-muted border-white/5 text-muted-foreground'
-                      }`}>
-                        {alert.icon}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold tracking-tight">Cow #{alert.id}</p>
-                          <Badge variant={
-                            alert.severity === 'Critical' ? 'destructive' : 
-                            alert.type === 'Geofence' ? 'secondary' :
-                            alert.severity === 'Medium' || alert.needsAttention ? 'secondary' :
-                            'outline'
-                          } className={`text-[10px] py-0 ${alert.type === 'Geofence' ? 'bg-orange-500/20 text-orange-500 border-orange-500/30' : ''}`}>
-                            {alert.type}
-                          </Badge>
+            {monitorType === 'Cows' ? (
+              <>
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle>Live Health Alerts</CardTitle>
+                    <CardDescription>Real-time feed from all wearable sensors with detailed diagnostic data</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {detailedAlerts.map((alert) => (
+                      <div key={alert.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-background/40 border border-white/5 rounded-lg gap-4 group">
+                        <div className="flex items-center gap-4">
+                          <div className={`p-3 rounded-xl border transition-colors ${
+                            alert.severity === 'Critical' ? 'bg-destructive/10 border-destructive/20 text-destructive' :
+                            alert.type === 'Geofence' ? 'bg-orange-500/10 border-orange-500/20 text-orange-500' :
+                            alert.severity === 'Medium' || alert.needsAttention ? 'bg-secondary/10 border-secondary/20 text-secondary' :
+                            alert.type === 'Healthy' ? 'bg-primary/10 border-primary/20 text-primary' :
+                            'bg-muted border-white/5 text-muted-foreground'
+                          }`}>
+                            {alert.icon}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-bold tracking-tight">Cow #{alert.id}</p>
+                              <Badge variant={
+                                alert.severity === 'Critical' ? 'destructive' : 
+                                alert.type === 'Geofence' ? 'secondary' :
+                                alert.severity === 'Medium' || alert.needsAttention ? 'secondary' :
+                                'outline'
+                              } className={`text-[10px] py-0 ${alert.type === 'Geofence' ? 'bg-orange-500/20 text-orange-500 border-orange-500/30' : ''}`}>
+                                {alert.type}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{alert.description}</p>
+                          </div>
                         </div>
-                        <p className="text-sm text-muted-foreground">{alert.description}</p>
+                        <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2">
+                          <div className="flex items-center gap-3">
+                            {alert.needsAttention && (
+                              <span className="text-[10px] font-bold text-secondary uppercase tracking-wider animate-pulse">Attention Required</span>
+                            )}
+                            <p className="text-[10px] text-muted-foreground whitespace-nowrap">{alert.time}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {alert.needsVet && (
+                              <Button size="sm" variant="default" className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold gap-2">
+                                <Phone className="h-3 w-3" />
+                                Call Vet
+                              </Button>
+                            )}
+                            <Button variant="link" size="sm" className="h-auto p-0 text-primary group-hover:underline">View Details</Button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2">
-                      <div className="flex items-center gap-3">
-                        {alert.needsAttention && (
-                          <span className="text-[10px] font-bold text-secondary uppercase tracking-wider animate-pulse">Attention Required</span>
-                        )}
-                        <p className="text-[10px] text-muted-foreground whitespace-nowrap">{alert.time}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {alert.needsVet && (
-                          <Button size="sm" variant="default" className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold gap-2">
-                            <Phone className="h-3 w-3" />
-                            Call Vet
-                          </Button>
-                        )}
-                        <Button variant="link" size="sm" className="h-auto p-0 text-primary group-hover:underline">View Details</Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-             </Card>
-             <HealthLegend />
+                    ))}
+                  </CardContent>
+                </Card>
+                <HealthLegend />
+              </>
+            ) : (
+              <NoDataState type={monitorType} message={`No Active Alerts for ${monitorType}`} />
+            )}
           </TabsContent>
 
           {/* Tab 3: Vitality KPIs */}
           <TabsContent value="kpis" className="space-y-6 animate-in slide-in-from-right-5 duration-300">
-            {/* Top Section: Herd Average Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <KPICard title="Avg Body Temp" value="38.5°C" subtitle="Normal range" icon={<Thermometer className="text-primary" />} chartColor="hsl(var(--primary))" />
-              <KPICard title="Rumination Time" value="480m" subtitle="Avg / 24h" icon={<Activity className="text-secondary" />} chartColor="hsl(var(--secondary))" />
-              <KPICard title="Milk Yield" value="32.4L" subtitle="Avg / animal" icon={<Milk className="text-primary" />} chartColor="hsl(var(--primary))" />
-            </div>
-
-            {/* Middle Section: Dropdown Selector */}
-            <Card className="glass-card">
-              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <CardTitle className="text-lg">Individual Performance Drill-Down</CardTitle>
-                  <CardDescription>Detailed telemetry analysis for specific livestock units</CardDescription>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">Analyze Specific Cow:</span>
-                  <Select value={kpiSelectedCowId} onValueChange={setKpiSelectedCowId}>
-                    <SelectTrigger className="w-[180px] bg-background/50 border-white/10">
-                      <SelectValue placeholder="Select Cow ID..." />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-white/10">
-                      <SelectItem value="BW-452">BW-452 (Critical)</SelectItem>
-                      <SelectItem value="BW-103">BW-103 (Attention Req.)</SelectItem>
-                      <SelectItem value="BW-007">BW-007 (Healthy)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-500" key={kpiSelectedCowId}>
-                  {/* Graph A: Temperature Deviation */}
-                  <Card className="bg-muted/20 border-white/5">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-bold flex items-center gap-2">
-                        <Thermometer className="h-4 w-4" style={{ color: currentKpiCow.healthColor }} />
-                        Temperature Deviation
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[200px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={currentKpiCow.tempData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                          <XAxis dataKey="time" hide />
-                          <YAxis domain={[37, 41]} stroke="#ffffff30" fontSize={10} />
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-                          />
-                          <Line type="monotone" name="Cow Temp" dataKey="cowTemp" stroke={currentKpiCow.healthColor} strokeWidth={2.5} dot={false} isAnimationActive={true} />
-                          <Line type="monotone" name="Herd Avg" dataKey="avgTemp" stroke="#ffffff30" strokeDasharray="5 5" strokeWidth={1.5} dot={false} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-
-                  {/* Graph B: Rumination Activity */}
-                  <Card className="bg-muted/20 border-white/5">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-bold flex items-center gap-2">
-                        <Activity className="h-4 w-4" style={{ color: currentKpiCow.healthColor }} />
-                        Rumination (5 Days)
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[200px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={currentKpiCow.ruminationData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                          <XAxis dataKey="day" stroke="#ffffff30" fontSize={10} />
-                          <YAxis stroke="#ffffff30" fontSize={10} />
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-                          />
-                          <ReferenceLine y={450} stroke="#10b981" strokeDasharray="3 3" label={{ position: 'top', value: 'Target', fill: '#10b981', fontSize: 10 }} />
-                          <Bar 
-                            dataKey="mins" 
-                            radius={[4, 4, 0, 0]}
-                            fill={currentKpiCow.healthColor}
-                            isAnimationActive={true}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-
-                  {/* Graph C: Milk Yield Consistency */}
-                  <Card className="bg-muted/20 border-white/5">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-bold flex items-center gap-2">
-                          <Milk className="h-4 w-4" style={{ color: currentKpiCow.healthColor }} />
-                          Milk Yield (7 Days)
-                        </CardTitle>
-                        <div className="flex items-center gap-1 text-[10px] font-bold uppercase">
-                          {currentKpiCow.trend === 'Improving' && <TrendingUp className="h-3 w-3 text-primary" />}
-                          {currentKpiCow.trend === 'Declining' && <TrendingDown className="h-3 w-3 text-destructive" />}
-                          {currentKpiCow.trend === 'Stable' && <Minus className="h-3 w-3 text-secondary" />}
-                          <span className={
-                            currentKpiCow.trend === 'Improving' ? 'text-primary' : 
-                            (currentKpiCow.trend === 'Declining' ? 'text-destructive' : 'text-secondary')
-                          }>{currentKpiCow.trend}</span>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="h-[200px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={currentKpiCow.milkData}>
-                          <defs>
-                            <linearGradient id={`milkGradient-${kpiSelectedCowId}`} x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor={currentKpiCow.healthColor} stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor={currentKpiCow.healthColor} stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                          <XAxis dataKey="day" hide />
-                          <YAxis stroke="#ffffff30" fontSize={10} />
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-                          />
-                          <Area type="monotone" dataKey="yield" stroke={currentKpiCow.healthColor} strokeWidth={2.5} fillOpacity={1} fill={`url(#milkGradient-${kpiSelectedCowId})`} isAnimationActive={true} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab 4: Thermal Analysis */}
-          <TabsContent value="thermal" className="space-y-6 animate-in fade-in duration-500">
-            {/* 1. Main Section: Herd Aggregate Trend */}
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Thermometer className="h-5 w-5 text-primary" />
-                  Herd Average Temperature (24h)
-                </CardTitle>
-                <CardDescription>
-                  Smooth aggregate tracking across the entire herd population
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={herdThermalData}>
-                      <defs>
-                        <linearGradient id="herdTempGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.4}/>
-                          <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                      <XAxis dataKey="time" stroke="#ffffff50" fontSize={10} />
-                      <YAxis domain={[37, 40]} stroke="#ffffff50" fontSize={10} />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
-                        itemStyle={{ color: 'hsl(var(--primary))' }}
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="avgTemp" 
-                        stroke="hsl(var(--destructive))" 
-                        strokeWidth={3}
-                        fillOpacity={1} 
-                        fill="url(#herdTempGradient)" 
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-4 flex items-center gap-2 p-3 bg-muted/30 rounded-lg border border-white/5">
-                  <Info className="h-4 w-4 text-primary" />
-                  <p className="text-xs text-muted-foreground italic">
-                    Data represents the aggregated average of 250 active sensors. Anomalies are smoothed out.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* 2. Sub-Section: Individual Investigator */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column: Controls & Favorites */}
-              <div className="lg:col-span-1 space-y-4">
-                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted-foreground px-1">
-                  <Zap className="h-4 w-4 text-primary" />
-                  Priority Monitoring
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <FavoriteCowCard 
-                    id="BW-452" 
-                    temp={pulsingTemps['BW-452']} 
-                    status="Critical" 
-                    isActive={selectedCowId === 'BW-452'}
-                    onClick={() => setSelectedCowId('BW-452')}
-                  />
-                  <FavoriteCowCard 
-                    id="BW-103" 
-                    temp={pulsingTemps['BW-103']} 
-                    status="Attention Required" 
-                    isActive={selectedCowId === 'BW-103'}
-                    onClick={() => setSelectedCowId('BW-103')}
-                  />
+            {monitorType === 'Cows' ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <KPICard title="Avg Body Temp" value="38.5°C" subtitle="Normal range" icon={<Thermometer className="text-primary" />} chartColor="hsl(var(--primary))" />
+                  <KPICard title="Rumination Time" value="480m" subtitle="Avg / 24h" icon={<Activity className="text-secondary" />} chartColor="hsl(var(--secondary))" />
+                  <KPICard title="Milk Yield" value="32.4L" subtitle="Avg / animal" icon={<Milk className="text-primary" />} chartColor="hsl(var(--primary))" />
                 </div>
 
                 <Card className="glass-card">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
-                      <SearchCode className="h-4 w-4 text-secondary" />
-                      Specific Cattle Inspector
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase">Select Cow ID</p>
-                      <Select value={selectedCowId} onValueChange={setSelectedCowId}>
-                        <SelectTrigger className="bg-background/50 border-white/10">
-                          <SelectValue placeholder="Search Cow ID..." />
+                  <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-lg">Individual Performance Drill-Down</CardTitle>
+                      <CardDescription>Detailed telemetry analysis for specific livestock units</CardDescription>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">Analyze Specific Cow:</span>
+                      <Select value={kpiSelectedCowId} onValueChange={setKpiSelectedCowId}>
+                        <SelectTrigger className="w-[180px] bg-background/50 border-white/10">
+                          <SelectValue placeholder="Select Cow ID..." />
                         </SelectTrigger>
                         <SelectContent className="bg-card border-white/10">
                           <SelectItem value="BW-452">BW-452 (Critical)</SelectItem>
                           <SelectItem value="BW-103">BW-103 (Attention Req.)</SelectItem>
-                          <SelectItem value="BW-089">BW-089 (Stable)</SelectItem>
-                          <SelectItem value="BW-007">BW-007 (Stable)</SelectItem>
+                          <SelectItem value="BW-007">BW-007 (Healthy)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="p-3 bg-secondary/10 border border-secondary/20 rounded-lg">
-                      <p className="text-[10px] font-bold text-secondary flex items-center gap-1">
-                        <Activity className="h-3 w-3" />
-                        INVESTIGATOR LOG
-                      </p>
-                      <p className="text-xs mt-1 leading-snug">
-                        Currently analyzing telemetry for <span className="text-primary font-bold">#{selectedCowId}</span>. 
-                        Status: <span style={{ color: selectedCowInfo.color }} className="font-bold">{selectedCowInfo.status}</span>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-500" key={kpiSelectedCowId}>
+                      {/* Graph A: Temperature Deviation */}
+                      <Card className="bg-muted/20 border-white/5">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-bold flex items-center gap-2">
+                            <Thermometer className="h-4 w-4" style={{ color: currentKpiCow.healthColor }} />
+                            Temperature Deviation
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-[200px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={currentKpiCow.tempData}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                              <XAxis dataKey="time" hide />
+                              <YAxis domain={[37, 41]} stroke="#ffffff30" fontSize={10} />
+                              <Tooltip 
+                                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                              />
+                              <Line type="monotone" name="Cow Temp" dataKey="cowTemp" stroke={currentKpiCow.healthColor} strokeWidth={2.5} dot={false} isAnimationActive={true} />
+                              <Line type="monotone" name="Herd Avg" dataKey="avgTemp" stroke="#ffffff30" strokeDasharray="5 5" strokeWidth={1.5} dot={false} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* Graph B: Rumination Activity */}
+                      <Card className="bg-muted/20 border-white/5">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-bold flex items-center gap-2">
+                            <Activity className="h-4 w-4" style={{ color: currentKpiCow.healthColor }} />
+                            Rumination (5 Days)
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-[200px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={currentKpiCow.ruminationData}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                              <XAxis dataKey="day" stroke="#ffffff30" fontSize={10} />
+                              <YAxis stroke="#ffffff30" fontSize={10} />
+                              <Tooltip 
+                                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                              />
+                              <ReferenceLine y={450} stroke="#10b981" strokeDasharray="3 3" label={{ position: 'top', value: 'Target', fill: '#10b981', fontSize: 10 }} />
+                              <Bar 
+                                dataKey="mins" 
+                                radius={[4, 4, 0, 0]}
+                                fill={currentKpiCow.healthColor}
+                                isAnimationActive={true}
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* Graph C: Milk Yield Consistency */}
+                      <Card className="bg-muted/20 border-white/5">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-bold flex items-center gap-2">
+                              <Milk className="h-4 w-4" style={{ color: currentKpiCow.healthColor }} />
+                              Milk Yield (7 Days)
+                            </CardTitle>
+                            <div className="flex items-center gap-1 text-[10px] font-bold uppercase">
+                              {currentKpiCow.trend === 'Improving' && <TrendingUp className="h-3 w-3 text-primary" />}
+                              {currentKpiCow.trend === 'Declining' && <TrendingDown className="h-3 w-3 text-destructive" />}
+                              {currentKpiCow.trend === 'Stable' && <Minus className="h-3 w-3 text-secondary" />}
+                              <span className={
+                                currentKpiCow.trend === 'Improving' ? 'text-primary' : 
+                                (currentKpiCow.trend === 'Declining' ? 'text-destructive' : 'text-secondary')
+                              }>{currentKpiCow.trend}</span>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="h-[200px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={currentKpiCow.milkData}>
+                              <defs>
+                                <linearGradient id={`milkGradient-${kpiSelectedCowId}`} x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor={currentKpiCow.healthColor} stopOpacity={0.3}/>
+                                  <stop offset="95%" stopColor={currentKpiCow.healthColor} stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                              <XAxis dataKey="day" hide />
+                              <YAxis stroke="#ffffff30" fontSize={10} />
+                              <Tooltip 
+                                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                              />
+                              <Area type="monotone" dataKey="yield" stroke={currentKpiCow.healthColor} strokeWidth={2.5} fillOpacity={1} fill={`url(#milkGradient-${kpiSelectedCowId})`} isAnimationActive={true} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <NoDataState type={monitorType} message={`No Vitality Data for ${monitorType}`} />
+            )}
+          </TabsContent>
+
+          {/* Tab 4: Thermal Analysis */}
+          <TabsContent value="thermal" className="space-y-6 animate-in fade-in duration-500">
+            {monitorType === 'Cows' ? (
+              <>
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Thermometer className="h-5 w-5 text-primary" />
+                      Herd Average Temperature (24h)
+                    </CardTitle>
+                    <CardDescription>
+                      Smooth aggregate tracking across the entire herd population
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={herdThermalData}>
+                          <defs>
+                            <linearGradient id="herdTempGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.4}/>
+                              <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                          <XAxis dataKey="time" stroke="#ffffff50" fontSize={10} />
+                          <YAxis domain={[37, 40]} stroke="#ffffff50" fontSize={10} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
+                            itemStyle={{ color: 'hsl(var(--primary))' }}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="avgTemp" 
+                            stroke="hsl(var(--destructive))" 
+                            strokeWidth={3}
+                            fillOpacity={1} 
+                            fill="url(#herdTempGradient)" 
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="mt-4 flex items-center gap-2 p-3 bg-muted/30 rounded-lg border border-white/5">
+                      <Info className="h-4 w-4 text-primary" />
+                      <p className="text-xs text-muted-foreground italic">
+                        Data represents the aggregated average of 250 active sensors. Anomalies are smoothed out.
                       </p>
                     </div>
                   </CardContent>
                 </Card>
-              </div>
 
-              {/* Right Column: Comparison Chart */}
-              <Card className="lg:col-span-2 glass-card">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg">Deviation Analysis</CardTitle>
-                      <CardDescription>Individual Cow #{selectedCowId} vs Herd Average</CardDescription>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-1 space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted-foreground px-1">
+                      <Zap className="h-4 w-4 text-primary" />
+                      Priority Monitoring
                     </div>
-                    <Badge variant="outline" className="border-primary/30 text-primary">Live Comparison</Badge>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FavoriteCowCard 
+                        id="BW-452" 
+                        temp={pulsingTemps['BW-452']} 
+                        status="Critical" 
+                        isActive={selectedCowId === 'BW-452'}
+                        onClick={() => setSelectedCowId('BW-452')}
+                      />
+                      <FavoriteCowCard 
+                        id="BW-103" 
+                        temp={pulsingTemps['BW-103']} 
+                        status="Attention Required" 
+                        isActive={selectedCowId === 'BW-103'}
+                        onClick={() => setSelectedCowId('BW-103')}
+                      />
+                    </div>
+
+                    <Card className="glass-card">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-bold flex items-center gap-2">
+                          <SearchCode className="h-4 w-4 text-secondary" />
+                          Specific Cattle Inspector
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase">Select Cow ID</p>
+                          <Select value={selectedCowId} onValueChange={setSelectedCowId}>
+                            <SelectTrigger className="bg-background/50 border-white/10">
+                              <SelectValue placeholder="Search Cow ID..." />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card border-white/10">
+                              <SelectItem value="BW-452">BW-452 (Critical)</SelectItem>
+                              <SelectItem value="BW-103">BW-103 (Attention Req.)</SelectItem>
+                              <SelectItem value="BW-089">BW-089 (Stable)</SelectItem>
+                              <SelectItem value="BW-007">BW-007 (Stable)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="p-3 bg-secondary/10 border border-secondary/20 rounded-lg">
+                          <p className="text-[10px] font-bold text-secondary flex items-center gap-1">
+                            <Activity className="h-3 w-3" />
+                            INVESTIGATOR LOG
+                          </p>
+                          <p className="text-xs mt-1 leading-snug">
+                            Currently analyzing telemetry for <span className="text-primary font-bold">#{selectedCowId}</span>. 
+                            Status: <span style={{ color: selectedCowInfo.color }} className="font-bold">{selectedCowInfo.status}</span>
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[350px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={liveComparisonData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                        <XAxis dataKey="time" stroke="#ffffff30" fontSize={10} />
-                        <YAxis domain={[37, 41]} stroke="#ffffff30" fontSize={10} />
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
-                        />
-                        <Legend iconType="circle" />
-                        <Line 
-                          type="monotone" 
-                          name={`Cow #${selectedCowId} Temp`} 
-                          dataKey="cowTemp" 
-                          stroke={selectedCowInfo.color} 
-                          strokeWidth={3} 
-                          dot={{ r: 4, fill: selectedCowInfo.color }} 
-                          activeDot={{ r: 6 }}
-                          isAnimationActive={true}
-                          animationDuration={500}
-                        />
-                        <Line 
-                          type="monotone" 
-                          name="Herd Baseline" 
-                          dataKey="avgTemp" 
-                          stroke="#ffffff30" 
-                          strokeWidth={2} 
-                          strokeDasharray="5 5" 
-                          dot={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            <HealthLegend />
+
+                  <Card className="lg:col-span-2 glass-card">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg">Deviation Analysis</CardTitle>
+                          <CardDescription>Individual Cow #{selectedCowId} vs Herd Average</CardDescription>
+                        </div>
+                        <Badge variant="outline" className="border-primary/30 text-primary">Live Comparison</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[350px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={liveComparisonData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                            <XAxis dataKey="time" stroke="#ffffff30" fontSize={10} />
+                            <YAxis domain={[37, 41]} stroke="#ffffff30" fontSize={10} />
+                            <Tooltip 
+                              contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
+                            />
+                            <Legend iconType="circle" />
+                            <Line 
+                              type="monotone" 
+                              name={`Cow #${selectedCowId} Temp`} 
+                              dataKey="cowTemp" 
+                              stroke={selectedCowInfo.color} 
+                              strokeWidth={3} 
+                              dot={{ r: 4, fill: selectedCowInfo.color }} 
+                              activeDot={{ r: 6 }}
+                              isAnimationActive={true}
+                              animationDuration={500}
+                            />
+                            <Line 
+                              type="monotone" 
+                              name="Herd Baseline" 
+                              dataKey="avgTemp" 
+                              stroke="#ffffff30" 
+                              strokeWidth={2} 
+                              strokeDasharray="5 5" 
+                              dot={false}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                <HealthLegend />
+              </>
+            ) : (
+              <NoDataState type={monitorType} message={`No Thermal Data for ${monitorType}`} />
+            )}
           </TabsContent>
 
           {/* Tab 5: Staff */}
@@ -878,216 +890,228 @@ export default function Dashboard() {
 
           {/* Tab 6: Individual Health */}
           <TabsContent value="individual" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="glass-card lg:col-span-1">
-                <CardHeader>
-                  <div className="flex items-center gap-4">
-                    <div className="relative h-20 w-20 rounded-xl overflow-hidden border border-primary/20">
-                      <Image 
-                        src={cowProfileImg?.imageUrl || 'https://picsum.photos/seed/cow/200/200'} 
-                        alt="Cow profile" 
-                        fill 
-                        className="object-cover"
-                        data-ai-hint={cowProfileImg?.imageHint || 'cow profile'}
-                      />
-                    </div>
-                    <div>
-                      <CardTitle className="text-2xl">Cow #BW-452</CardTitle>
-                      <Badge className="bg-primary/20 text-primary hover:bg-primary/30 uppercase tracking-tight">Cattle Health 360 Tag</Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <DetailRow label="Breed" value="Holstein Friesian" />
-                  <DetailRow label="Age" value="4.2 Years" />
-                  <DetailRow label="Weight" value="680 kg" />
-                  <DetailRow label="Last Calving" value="Aug 12, 2023" />
-                  <DetailRow label="Sensor ID" value="Tag-001" />
-                  <div className="pt-4 border-t border-white/5 space-y-2">
-                    <p className="text-xs text-muted-foreground uppercase font-bold">Health Summary</p>
-                    <p className="text-sm leading-relaxed">Maintaining stable metabolic rates. Rumination cycles consistent with high-yield performance profiles.</p>
-                  </div>
-                </CardContent>
-              </Card>
+            {monitorType === 'Cows' ? (
+              <>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <Card className="glass-card lg:col-span-1">
+                    <CardHeader>
+                      <div className="flex items-center gap-4">
+                        <div className="relative h-20 w-20 rounded-xl overflow-hidden border border-primary/20">
+                          <Image 
+                            src={cowProfileImg?.imageUrl || 'https://picsum.photos/seed/cow/200/200'} 
+                            alt="Cow profile" 
+                            fill 
+                            className="object-cover"
+                            data-ai-hint={cowProfileImg?.imageHint || 'cow face'}
+                          />
+                        </div>
+                        <div>
+                          <CardTitle className="text-2xl">Cow #BW-452</CardTitle>
+                          <Badge className="bg-primary/20 text-primary hover:bg-primary/30 uppercase tracking-tight">Cattle Health 360 Tag</Badge>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <DetailRow label="Breed" value="Holstein Friesian" />
+                      <DetailRow label="Age" value="4.2 Years" />
+                      <DetailRow label="Weight" value="680 kg" />
+                      <DetailRow label="Last Calving" value="Aug 12, 2023" />
+                      <DetailRow label="Sensor ID" value="Tag-001" />
+                      <div className="pt-4 border-t border-white/5 space-y-2">
+                        <p className="text-xs text-muted-foreground uppercase font-bold">Health Summary</p>
+                        <p className="text-sm leading-relaxed">Maintaining stable metabolic rates. Rumination cycles consistent with high-yield performance profiles.</p>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card className="glass-card lg:col-span-2">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle>Live Motion Feed</CardTitle>
-                    <CardDescription>Accelerated activity profiling (Walking/Eating/Sleeping)</CardDescription>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#1e3a8a' }} /> 
-                      <span className="text-xs font-medium">Walking</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#eab308' }} /> 
-                      <span className="text-xs font-medium">Eating</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2.5 w-2.5 rounded-full bg-white" /> 
-                      <span className="text-xs font-medium">Sleeping</span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={liveActivity}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" />
-                      <XAxis dataKey="time" hide />
-                      <YAxis stroke="#ffffff20" fontSize={10} />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
-                        itemStyle={{ fontSize: '10px' }}
-                      />
-                      <Line type="monotone" name="Walking" dataKey="walking" stroke="#1e3a8a" strokeWidth={2.5} dot={false} isAnimationActive={false} />
-                      <Line type="monotone" name="Eating" dataKey="eating" stroke="#eab308" strokeWidth={2.5} dot={false} isAnimationActive={false} />
-                      <Line type="monotone" name="Sleeping" dataKey="sleeping" stroke="#ffffff" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-            <HealthLegend />
+                  <Card className="glass-card lg:col-span-2">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <div>
+                        <CardTitle>Live Motion Feed</CardTitle>
+                        <CardDescription>Accelerated activity profiling (Walking/Eating/Sleeping)</CardDescription>
+                      </div>
+                      <div className="flex gap-4">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#1e3a8a' }} /> 
+                          <span className="text-xs font-medium">Walking</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#eab308' }} /> 
+                          <span className="text-xs font-medium">Eating</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="h-2.5 w-2.5 rounded-full bg-white" /> 
+                          <span className="text-xs font-medium">Sleeping</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={liveActivity}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" />
+                          <XAxis dataKey="time" hide />
+                          <YAxis stroke="#ffffff20" fontSize={10} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }}
+                            itemStyle={{ fontSize: '10px' }}
+                          />
+                          <Line type="monotone" name="Walking" dataKey="walking" stroke="#1e3a8a" strokeWidth={2.5} dot={false} isAnimationActive={false} />
+                          <Line type="monotone" name="Eating" dataKey="eating" stroke="#eab308" strokeWidth={2.5} dot={false} isAnimationActive={false} />
+                          <Line type="monotone" name="Sleeping" dataKey="sleeping" stroke="#ffffff" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </div>
+                <HealthLegend />
+              </>
+            ) : (
+              <NoDataState type={monitorType} message={`No Profile Data for ${monitorType}`} />
+            )}
           </TabsContent>
 
           {/* Tab 7: Hardware Inspector (LIVE UPDATE) */}
           <TabsContent value="sensors" className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 glass-card p-4 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/20 rounded-lg">
-                  <Database className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider">Device Hardware Selector</h3>
-                  <p className="text-xs text-muted-foreground">Select a specific tag to inspect module telemetry</p>
-                </div>
-              </div>
-              <Select value={selectedHardwareTagId} onValueChange={setSelectedHardwareTagId}>
-                <SelectTrigger className="w-[250px] bg-background/50 border-white/10">
-                  <SelectValue placeholder="Select device..." />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-white/10">
-                  {hardwareTags.map(tag => (
-                    <SelectItem key={tag.id} value={tag.id}>
-                      {tag.id} ({tag.cow} - {tag.scenario})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column: Device Profile */}
-              <Card className={`lg:col-span-1 border-white/10 shadow-2xl relative overflow-hidden group transition-colors duration-500 ${
-                currentHardwareTag.battery < 20 ? 'bg-destructive/10 border-destructive/20' : 'bg-slate-900/80'
-              }`}>
-                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <Cpu className="h-48 w-48 text-white rotate-12" />
-                </div>
-                <CardHeader className="relative z-10 pb-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="p-2 bg-primary/20 rounded-md">
-                      <Zap className="h-5 w-5 text-primary" />
+            {monitorType === 'Cows' ? (
+              <>
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 glass-card p-4 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/20 rounded-lg">
+                      <Database className="h-5 w-5 text-primary" />
                     </div>
-                    <Badge variant="outline" className={`text-[10px] ${
-                      currentHardwareTag.battery < 20 ? 'border-destructive/30 text-destructive' : 'border-primary/30 text-primary'
-                    }`}>
-                      {currentHardwareTag.scenario}
-                    </Badge>
+                    <div>
+                      <h3 className="text-sm font-bold uppercase tracking-wider">Device Hardware Selector</h3>
+                      <p className="text-xs text-muted-foreground">Select a specific tag to inspect module telemetry</p>
+                    </div>
                   </div>
-                  <CardTitle className="text-2xl font-bold tracking-tight text-white font-headline">Smart Collar Tag (Pro)</CardTitle>
-                </CardHeader>
-                <CardContent className="relative z-10 space-y-6">
-                  <div className="space-y-4 pt-4">
-                    <HardwareStat label="Model Name" value="CH-360-X1" />
-                    <HardwareStat label="Hardware Assigned" value={`${currentHardwareTag.cow} (${currentHardwareTag.type})`} valueClass="text-primary" />
-                    <HardwareStat label="Firmware Version" value="v2.4.1 (Stable)" isMono />
-                    <HardwareStat 
-                      label="Power Source" 
-                      value={`3.7V LiPo (${currentHardwareTag.battery}%)`} 
-                      icon={<Battery className={`h-3 w-3 ${currentHardwareTag.battery < 20 ? 'text-destructive animate-pulse' : 'text-primary'}`} />} 
-                    />
-                    <HardwareStat label="Last Calibration" value={currentHardwareTag.lastCalib} />
-                    <HardwareStat 
-                      label="Gateway Connection" 
-                      value={`Signal: ${currentHardwareTag.signal + (currentHardwareTag.id === 'Tag-003' ? 0 : hardwareJitter.signal)} dBm`} 
-                      valueClass={currentHardwareTag.signal < -80 ? 'text-destructive font-bold' : 'text-secondary font-bold'} 
-                    />
-                  </div>
-                  
-                  <div className="p-4 bg-background/40 rounded-lg border border-white/5 mt-6">
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase mb-3 tracking-widest">Antenna Integrity</p>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-[10px] mb-1">
-                        <span>LoRa Uplink</span>
-                        <span className={currentHardwareTag.signal < -80 ? 'text-destructive' : 'text-primary'}>
-                          {currentHardwareTag.signal < -80 ? '42%' : '98%'}
-                        </span>
+                  <Select value={selectedHardwareTagId} onValueChange={setSelectedHardwareTagId}>
+                    <SelectTrigger className="w-[250px] bg-background/50 border-white/10">
+                      <SelectValue placeholder="Select device..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-white/10">
+                      {hardwareTags.map(tag => (
+                        <SelectItem key={tag.id} value={tag.id}>
+                          {tag.id} ({tag.cow} - {tag.scenario})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left Column: Device Profile */}
+                  <Card className={`lg:col-span-1 border-white/10 shadow-2xl relative overflow-hidden group transition-colors duration-500 ${
+                    currentHardwareTag.battery < 20 ? 'bg-destructive/10 border-destructive/20' : 'bg-slate-900/80'
+                  }`}>
+                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                      <Cpu className="h-48 w-48 text-white rotate-12" />
+                    </div>
+                    <CardHeader className="relative z-10 pb-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="p-2 bg-primary/20 rounded-md">
+                          <Zap className="h-5 w-5 text-primary" />
+                        </div>
+                        <Badge variant="outline" className={`text-[10px] ${
+                          currentHardwareTag.battery < 20 ? 'border-destructive/30 text-destructive' : 'border-primary/30 text-primary'
+                        }`}>
+                          {currentHardwareTag.scenario}
+                        </Badge>
                       </div>
-                      <Progress 
-                        value={currentHardwareTag.signal < -80 ? 42 : 98} 
-                        className={`h-1 bg-white/5`} 
+                      <CardTitle className="text-2xl font-bold tracking-tight text-white font-headline">Smart Collar Tag (Pro)</CardTitle>
+                    </CardHeader>
+                    <CardContent className="relative z-10 space-y-6">
+                      <div className="space-y-4 pt-4">
+                        <HardwareStat label="Model Name" value="CH-360-X1" />
+                        <HardwareStat label="Hardware Assigned" value={`${currentHardwareTag.cow} (${currentHardwareTag.type})`} valueClass="text-primary" />
+                        <HardwareStat label="Firmware Version" value="v2.4.1 (Stable)" isMono />
+                        <HardwareStat 
+                          label="Power Source" 
+                          value={`3.7V LiPo (${currentHardwareTag.battery}%)`} 
+                          icon={<Battery className={`h-3 w-3 ${currentHardwareTag.battery < 20 ? 'text-destructive animate-pulse' : 'text-primary'}`} />} 
+                        />
+                        <HardwareStat label="Last Calibration" value={currentHardwareTag.lastCalib} />
+                        <HardwareStat 
+                          label="Gateway Connection" 
+                          value={`Signal: ${currentHardwareTag.signal + (currentHardwareTag.id === 'Tag-003' ? 0 : hardwareJitter.signal)} dBm`} 
+                          valueClass={currentHardwareTag.signal < -80 ? 'text-destructive font-bold' : 'text-secondary font-bold'} 
+                        />
+                      </div>
+                      
+                      <div className="p-4 bg-background/40 rounded-lg border border-white/5 mt-6">
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase mb-3 tracking-widest">Antenna Integrity</p>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[10px] mb-1">
+                            <span>LoRa Uplink</span>
+                            <span className={currentHardwareTag.signal < -80 ? 'text-destructive' : 'text-primary'}>
+                              {currentHardwareTag.signal < -80 ? '42%' : '98%'}
+                            </span>
+                          </div>
+                          <Progress 
+                            value={currentHardwareTag.signal < -80 ? 42 : 98} 
+                            className={`h-1 bg-white/5`} 
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Right Column: Module Grid */}
+                  <div className="lg:col-span-2 space-y-4">
+                    <div className="flex items-center justify-between px-2">
+                      <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Active Sensor Modules</h3>
+                      <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary font-mono text-[10px]">4 Modules Detected</Badge>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <SensorModuleCard 
+                        name={currentHardwareTag.modules.accel.name}
+                        status={currentHardwareTag.modules.accel.status}
+                        statusType={currentHardwareTag.modules.accel.statusType}
+                        description={currentHardwareTag.modules.accel.desc}
+                        readout={currentHardwareTag.modules.accel.statusType === 'destructive' && currentHardwareTag.modules.accel.status !== 'Low Power' ? 'AXIS_LOCKED' : (
+                          currentHardwareTag.modules.accel.isCalib ? '---' : 
+                          `X:${(currentHardwareTag.modules.accel.x + hardwareJitter.accel).toFixed(2)} Y:${(currentHardwareTag.modules.accel.y + hardwareJitter.accel).toFixed(2)} Z:${(currentHardwareTag.modules.accel.z + hardwareJitter.accel).toFixed(2)}`
+                        )}
+                        health={currentHardwareTag.modules.accel.health}
+                        icon={<Activity className="h-4 w-4" />}
+                        isBlinking={currentHardwareTag.modules.accel.isCalib}
+                      />
+                      <SensorModuleCard 
+                        name={currentHardwareTag.modules.thermal.name}
+                        status={currentHardwareTag.modules.thermal.status}
+                        statusType={currentHardwareTag.modules.thermal.statusType}
+                        description={currentHardwareTag.modules.thermal.desc}
+                        readout={currentHardwareTag.modules.thermal.isCalib ? '---' : `${(currentHardwareTag.modules.thermal.val + hardwareJitter.temp).toFixed(1)}°C`}
+                        health={currentHardwareTag.modules.thermal.health}
+                        icon={<Thermometer className="h-4 w-4" />}
+                        isBlinking={currentHardwareTag.modules.thermal.isCalib}
+                      />
+                      <SensorModuleCard 
+                        name={currentHardwareTag.modules.heart.name}
+                        status={currentHardwareTag.modules.heart.status}
+                        statusType={currentHardwareTag.modules.heart.statusType}
+                        description={currentHardwareTag.modules.heart.desc}
+                        readout={currentHardwareTag.modules.heart.status === 'Disabled' ? '-- BPM' : (currentHardwareTag.modules.heart.isCalib ? '---' : `${currentHardwareTag.modules.heart.val + hardwareJitter.heart} BPM`)}
+                        health={currentHardwareTag.modules.heart.health}
+                        isBlinking={currentHardwareTag.modules.heart.statusType === 'warning' || currentHardwareTag.modules.heart.status === 'Disabled'}
+                        icon={<Zap className="h-4 w-4" />}
+                      />
+                      <SensorModuleCard 
+                        name={currentHardwareTag.modules.lora.name}
+                        status={currentHardwareTag.modules.lora.status}
+                        statusType={currentHardwareTag.modules.lora.statusType}
+                        description={currentHardwareTag.modules.lora.desc}
+                        readout={currentHardwareTag.modules.lora.isCalib ? '---' : `${currentHardwareTag.modules.lora.sf} / ${currentHardwareTag.modules.lora.freq}`}
+                        health={currentHardwareTag.modules.lora.health}
+                        icon={<Radio className="h-4 w-4" />}
+                        isBlinking={currentHardwareTag.modules.lora.status === 'Weak Signal'}
                       />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Right Column: Module Grid */}
-              <div className="lg:col-span-2 space-y-4">
-                <div className="flex items-center justify-between px-2">
-                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Active Sensor Modules</h3>
-                  <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary font-mono text-[10px]">4 Modules Detected</Badge>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <SensorModuleCard 
-                    name={currentHardwareTag.modules.accel.name}
-                    status={currentHardwareTag.modules.accel.status}
-                    statusType={currentHardwareTag.modules.accel.statusType}
-                    description={currentHardwareTag.modules.accel.desc}
-                    readout={currentHardwareTag.modules.accel.statusType === 'destructive' && currentHardwareTag.modules.accel.status !== 'Low Power' ? 'AXIS_LOCKED' : (
-                      currentHardwareTag.modules.accel.isCalib ? '---' : 
-                      `X:${(currentHardwareTag.modules.accel.x + hardwareJitter.accel).toFixed(2)} Y:${(currentHardwareTag.modules.accel.y + hardwareJitter.accel).toFixed(2)} Z:${(currentHardwareTag.modules.accel.z + hardwareJitter.accel).toFixed(2)}`
-                    )}
-                    health={currentHardwareTag.modules.accel.health}
-                    icon={<Activity className="h-4 w-4" />}
-                    isBlinking={currentHardwareTag.modules.accel.isCalib}
-                  />
-                  <SensorModuleCard 
-                    name={currentHardwareTag.modules.thermal.name}
-                    status={currentHardwareTag.modules.thermal.status}
-                    statusType={currentHardwareTag.modules.thermal.statusType}
-                    description={currentHardwareTag.modules.thermal.desc}
-                    readout={currentHardwareTag.modules.thermal.isCalib ? '---' : `${(currentHardwareTag.modules.thermal.val + hardwareJitter.temp).toFixed(1)}°C`}
-                    health={currentHardwareTag.modules.thermal.health}
-                    icon={<Thermometer className="h-4 w-4" />}
-                    isBlinking={currentHardwareTag.modules.thermal.isCalib}
-                  />
-                  <SensorModuleCard 
-                    name={currentHardwareTag.modules.heart.name}
-                    status={currentHardwareTag.modules.heart.status}
-                    statusType={currentHardwareTag.modules.heart.statusType}
-                    description={currentHardwareTag.modules.heart.desc}
-                    readout={currentHardwareTag.modules.heart.status === 'Disabled' ? '-- BPM' : (currentHardwareTag.modules.heart.isCalib ? '---' : `${currentHardwareTag.modules.heart.val + hardwareJitter.heart} BPM`)}
-                    health={currentHardwareTag.modules.heart.health}
-                    isBlinking={currentHardwareTag.modules.heart.statusType === 'warning' || currentHardwareTag.modules.heart.status === 'Disabled'}
-                    icon={<Zap className="h-4 w-4" />}
-                  />
-                  <SensorModuleCard 
-                    name={currentHardwareTag.modules.lora.name}
-                    status={currentHardwareTag.modules.lora.status}
-                    statusType={currentHardwareTag.modules.lora.statusType}
-                    description={currentHardwareTag.modules.lora.desc}
-                    readout={currentHardwareTag.modules.lora.isCalib ? '---' : `${currentHardwareTag.modules.lora.sf} / ${currentHardwareTag.modules.lora.freq}`}
-                    health={currentHardwareTag.modules.lora.health}
-                    icon={<Radio className="h-4 w-4" />}
-                    isBlinking={currentHardwareTag.modules.lora.status === 'Weak Signal'}
-                  />
-                </div>
-              </div>
-            </div>
+              </>
+            ) : (
+              <NoDataState type={monitorType} message={`No Active Sensors paired with ${monitorType}`} />
+            )}
           </TabsContent>
         </Tabs>
       </main>
@@ -1102,6 +1126,16 @@ export default function Dashboard() {
 }
 
 // Subcomponents
+function NoDataState({ type, message }: { type: string, message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-[400px] border-2 border-dashed border-white/10 rounded-xl bg-card/20 animate-in fade-in duration-500">
+      <Search className="h-16 w-16 text-muted-foreground/30 mb-4" />
+      <h3 className="text-xl font-bold text-muted-foreground">{message}</h3>
+      <p className="text-sm text-muted-foreground/60">Please switch to 'Cows' to view active demo data.</p>
+    </div>
+  )
+}
+
 function HealthLegend() {
   return (
     <div className="flex justify-center w-full">
@@ -1264,11 +1298,11 @@ function HardwareStat({ label, value, isMono, icon, valueClass }: any) {
 }
 
 function SensorModuleCard({ name, status, statusType, description, readout, health, icon, isBlinking }: any) {
-  const statusColors = {
-    success: 'bg-primary text-primary-foreground',
-    warning: 'bg-amber-500 text-white',
-    info: 'bg-secondary text-secondary-foreground',
-    destructive: 'bg-destructive text-white'
+  const bgTints = {
+    success: 'bg-emerald-500/5 border-emerald-500/20',
+    warning: 'bg-amber-500/10 border-amber-500/20',
+    info: 'bg-secondary/10 border-secondary/20',
+    destructive: 'bg-destructive/10 border-destructive/20'
   }
 
   const pulseColors = {
@@ -1276,13 +1310,6 @@ function SensorModuleCard({ name, status, statusType, description, readout, heal
     warning: 'bg-amber-500',
     info: 'bg-secondary',
     destructive: 'bg-destructive'
-  }
-
-  const bgTints = {
-    success: 'bg-emerald-500/5 border-emerald-500/20',
-    warning: 'bg-amber-500/10 border-amber-500/20',
-    info: 'bg-secondary/10 border-secondary/20',
-    destructive: 'bg-destructive/10 border-destructive/20'
   }
 
   return (

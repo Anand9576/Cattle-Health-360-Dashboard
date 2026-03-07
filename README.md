@@ -28,6 +28,12 @@ Cattle Health 360 is a responsive, frontend-only prototype that provides a unifi
 
 ------
 
+## 🌐 User Guidance Video
+
+👉 https://www.loom.com/share/26180f841d5846f38229ccd326005e28
+
+------
+
 ## 🛠️ Tech Stack
 
 - Framework: Next.js (App Router)
